@@ -181,20 +181,7 @@ export default function LandingPage() {
         </Card>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-muted/50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
-                <Sparkles className="h-3 w-3 text-primary-foreground" />
-              </div>
-              <span className="font-semibold">percent club</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Privacy by design. No money custody. Always secure.</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer is provided globally via <SiteFooter /> */}
     </div>
   )
 }

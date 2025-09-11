@@ -10,6 +10,7 @@ import { QueryProvider } from "@/providers/query-provider"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { MainNav } from "@/components/navigation/main-nav"
+import { SiteFooter } from "@/components/navigation/site-footer"
 
 export const metadata: Metadata = {
   title: "percent club",
@@ -31,6 +32,7 @@ export default function RootLayout({
               <AuthProvider>
                 <MainNav />
                 {children}
+                <SiteFooter />
                 <Toaster />
               </AuthProvider>
             </QueryProvider>

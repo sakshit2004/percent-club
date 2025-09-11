@@ -24,6 +24,11 @@ const navigation = [
   { name: "Agent", href: "/agent", icon: Bot },
   { name: "Feed", href: "/feed", icon: Users },
   { name: "Communities", href: "/communities", icon: Users },
+  // Marketing/Info pages
+  { name: "About Us", href: "/about" },
+  { name: "What We Offer", href: "/offerings" },
+  { name: "How It Works", href: "/how-it-works" },
+  { name: "Pricing", href: "/pricing" },
 ]
 
 export function MainNav() {
@@ -50,8 +55,17 @@ export function MainNav() {
     router.push("/")
   }
 
-  // Don't show nav on landing, onboarding, or auth pages
-  if (pathname === "/" || pathname === "/onboarding" || pathname.startsWith("/auth")) {
+  // Hide app nav on marketing and pre-auth pages
+  const hideOn = [
+    "/",
+    "/onboarding",
+    "/about",
+    "/offerings",
+    "/how-it-works",
+    "/pricing",
+    "/learn/challenges",
+  ]
+  if (pathname.startsWith("/auth") || hideOn.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return null
   }
 

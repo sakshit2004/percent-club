@@ -40,14 +40,18 @@ export default function OnboardingPage() {
   const progress = (currentStep / totalSteps) * 100
 
   const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
-    }
+    setCurrentStep((s) => (s < totalSteps ? s + 1 : s))
   }
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep((s) => Math.max(1, s - 1))
+    } else {
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back()
+      } else {
+        router.push("/")
+      }
     }
   }
 
@@ -209,7 +213,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <Button variant="outline" onClick={handleSkipPod} className="text-sm bg-transparent">
+                  <Button type="button" variant="outline" onClick={handleSkipPod} className="text-sm bg-transparent">
                     Skip for now - I'll create pods later
                   </Button>
                 </div>
@@ -258,13 +262,14 @@ export default function OnboardingPage() {
 
         {/* Navigation */}
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
+          <Button type="button" variant="outline" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
 
           {currentStep < totalSteps ? (
             <Button
+              type="button"
               onClick={handleNext}
               disabled={
                 (currentStep === 1 && !canProceedStep1) ||
@@ -276,7 +281,7 @@ export default function OnboardingPage() {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleComplete} disabled={isLoading}>
+            <Button type="button" onClick={handleComplete} disabled={isLoading}>
               {isLoading ? "Saving..." : "Create Account"}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
