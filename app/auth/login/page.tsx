@@ -49,14 +49,14 @@ export default function LoginPage() {
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold">Blossom</span>
+              <span className="text-2xl font-bold">percent club</span>
             </div>
           </div>
 
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Welcome back</CardTitle>
-              <CardDescription>Sign in to your Blossom account</CardDescription>
+              <CardDescription>Sign in to your percent club account</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin}>

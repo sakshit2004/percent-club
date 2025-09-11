@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -39,6 +41,7 @@ interface SettingsData {
 }
 
 export default function SettingsPage() {
+  const router = useRouter()
   const [settings, setSettings] = useState<SettingsData>({
     profile: {
       alias: "Sarah Chen",
@@ -67,6 +70,17 @@ export default function SettingsPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch (e) {
+      // no-op if supabase isn't configured
+    } finally {
+      router.push("/")
+    }
+  }
 
   const handleSave = async () => {
     setIsLoading(true)
@@ -374,9 +388,12 @@ export default function SettingsPage() {
           Delete Account
         </Button>
 
-        <Button onClick={handleSave} disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Changes"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleLogout}>Log out</Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </div>
     </div>
   )

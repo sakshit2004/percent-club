@@ -12,8 +12,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { MainNav } from "@/components/navigation/main-nav"
 
 export const metadata: Metadata = {
-  title: "Blossom for Savings",
-  description: "Save smarter with Pods, Challenges, and your AI Agent",
+  title: "percent club",
+  description: "percent club — save smarter with Pods, Challenges, and your AI Agent",
   generator: "v0.app",
 }
 

@@ -77,7 +77,7 @@ export default function OnboardingPage() {
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">Blossom</span>
+            <span className="text-2xl font-bold">percent club</span>
           </div>
           <h1 className="text-3xl font-bold mb-2">Welcome to your savings journey!</h1>
           <p className="text-muted-foreground">Let's get you set up in just a few steps</p>
@@ -248,7 +248,7 @@ export default function OnboardingPage() {
                 <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
                   <h4 className="font-medium text-primary mb-2">Next step:</h4>
                   <p className="text-sm text-muted-foreground">
-                    Create your account to save your progress and start your savings journey with Blossom!
+                    Create your account to save your progress and start your savings journey with percent club!
                   </p>
                 </div>
               </CardContent>

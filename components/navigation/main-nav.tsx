@@ -29,12 +29,12 @@ const navigation = [
 export function MainNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, loading } = useAuth()
+  const { user, loading, supabaseConfigured } = useAuth()
   const [profile, setProfile] = useState<{ display_name?: string } | null>(null)
-  const supabase = createClient()
+  const supabase = supabaseConfigured ? createClient() : null
 
   useEffect(() => {
-    if (user) {
+    if (user && supabase) {
       const fetchProfile = async () => {
         const { data } = await supabase.from("profiles").select("display_name").eq("id", user.id).single()
         setProfile(data)
@@ -44,7 +44,9 @@ export function MainNav() {
   }, [user, supabase])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     router.push("/")
   }
 
@@ -69,7 +71,7 @@ export function MainNav() {
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold">Blossom</span>
+          <span className="text-xl font-bold">percent club</span>
         </Link>
 
         {/* Navigation */}
@@ -98,9 +100,13 @@ export function MainNav() {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/diverse-user-avatars.png" alt="User" />
+            <Button
+              variant="ghost"
+              className="relative h-9 w-9 rounded-full cursor-pointer"
+              aria-label="Open user menu"
+            >
+              <Avatar className="h-9 w-9">
+                <AvatarImage src="/diverse-user-avatars.png" alt="User" className="pointer-events-none" draggable={false} />
                 <AvatarFallback>
                   {profile?.display_name
                     ? profile.display_name.slice(0, 2).toUpperCase()
@@ -109,7 +115,7 @@ export function MainNav() {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuContent className="w-56 z-50" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{profile?.display_name || user.email}</p>
@@ -117,6 +123,9 @@ export function MainNav() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/about">About percent club</Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/profile/me">
                 <Avatar className="h-4 w-4 mr-2">
@@ -128,6 +137,9 @@ export function MainNav() {
                 </Avatar>
                 Profile
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">Edit Profile</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/settings">

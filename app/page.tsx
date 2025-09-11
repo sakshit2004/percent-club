@@ -26,7 +26,7 @@ export default function LandingPage() {
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center animate-pulse">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold">Blossom</span>
+          <span className="text-xl font-bold">percent club</span>
         </div>
       </div>
     )
@@ -45,7 +45,7 @@ export default function LandingPage() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">Blossom</span>
+            <span className="text-xl font-bold">percent club</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
@@ -89,8 +89,8 @@ export default function LandingPage() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Three powerful ways to save</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Blossom combines goal-based savings, automated challenges, and AI-powered insights to help you build better
-            financial habits.
+            percent club combines goal-based savings, automated challenges, and AI-powered insights to help you build
+            better financial habits.
           </p>
         </div>
 
@@ -168,8 +168,8 @@ export default function LandingPage() {
           <CardContent className="p-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to start saving smarter?</h2>
             <p className="text-primary-foreground/80 mb-6 max-w-2xl mx-auto">
-              Join thousands of users who have transformed their savings habits with Blossom. No money custody, complete
-              privacy, and always free to start.
+              Join thousands of users who have transformed their savings habits with percent club. No money custody,
+              complete privacy, and always free to start.
             </p>
             <Button size="lg" variant="secondary" asChild>
               <Link href="/onboarding">
@@ -189,7 +189,7 @@ export default function LandingPage() {
               <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
                 <Sparkles className="h-3 w-3 text-primary-foreground" />
               </div>
-              <span className="font-semibold">Blossom for Savings</span>
+              <span className="font-semibold">percent club</span>
             </div>
             <p className="text-sm text-muted-foreground">Privacy by design. No money custody. Always secure.</p>
           </div>

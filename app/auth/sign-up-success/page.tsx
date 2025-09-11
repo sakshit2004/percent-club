@@ -12,7 +12,7 @@ export default function SignUpSuccessPage() {
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold">Blossom</span>
+              <span className="text-2xl font-bold">percent club</span>
             </div>
           </div>
 
@@ -26,7 +26,7 @@ export default function SignUpSuccessPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground text-center">
-                You&apos;ve successfully signed up for Blossom. Please check your email and click the confirmation link
+                You&apos;ve successfully signed up for percent club. Please check your email and click the confirmation link
                 to activate your account and complete your onboarding.
               </p>
             </CardContent>
