@@ -16,15 +16,25 @@ export default function LandingPage() {
             <span className="text-xl font-bold">percentclub</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">About Us</Link>
-            <Link href="/offerings" className="text-sm text-muted-foreground hover:text-foreground">What We Offer</Link>
-            <Link href="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground">How It Works</Link>
-            <Link href="/learn/challenges" className="text-sm text-muted-foreground hover:text-foreground">Challenges</Link>
-            <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground">Pricing</Link>
+            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">
+              About Us
+            </Link>
+            <Link href="/offerings" className="text-sm text-muted-foreground hover:text-foreground">
+              What We Offer
+            </Link>
+            <Link href="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground">
+              How It Works
+            </Link>
+            <Link href="/learn/challenges" className="text-sm text-muted-foreground hover:text-foreground">
+              Challenges
+            </Link>
+            <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground">
+              Pricing
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
-              <Link href="/pods">Sign In</Link>
+              <Link href="/auth/login">Sign In</Link>
             </Button>
             <Button asChild>
               <Link href="/onboarding">Get Started</Link>
