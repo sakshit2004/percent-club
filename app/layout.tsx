@@ -7,6 +7,7 @@ import "./globals.css"
 import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { QueryProvider } from "@/providers/query-provider"
+import { AuthProvider } from "@/components/auth/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { MainNav } from "@/components/navigation/main-nav"
 
@@ -27,9 +28,11 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <QueryProvider>
-              <MainNav />
-              {children}
-              <Toaster />
+              <AuthProvider>
+                <MainNav />
+                {children}
+                <Toaster />
+              </AuthProvider>
             </QueryProvider>
           </ThemeProvider>
         </Suspense>

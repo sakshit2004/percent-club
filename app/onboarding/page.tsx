@@ -53,14 +53,11 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Welcome to Blossom!",
-        description: "Your account has been set up successfully. Let's start saving!",
-      })
-      router.push("/pods")
-    }, 2000)
+    // Store onboarding data in localStorage to use after authentication
+    localStorage.setItem("blossomOnboardingData", JSON.stringify(data))
+
+    // Redirect to sign-up page
+    router.push("/auth/sign-up")
   }
 
   const handleSkipPod = () => {
@@ -227,7 +224,7 @@ export default function OnboardingPage() {
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Check className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle>You're all set!</CardTitle>
+                <CardTitle>Ready to start saving!</CardTitle>
                 <p className="text-muted-foreground">Here's what we've set up for you:</p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -249,12 +246,10 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                  <h4 className="font-medium text-primary mb-2">Next steps:</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Explore challenges to automate your savings</li>
-                    <li>• Connect with the community for motivation</li>
-                    <li>• Chat with {data.agentName} for personalized tips</li>
-                  </ul>
+                  <h4 className="font-medium text-primary mb-2">Next step:</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Create your account to save your progress and start your savings journey with Blossom!
+                  </p>
                 </div>
               </CardContent>
             </>
@@ -282,7 +277,7 @@ export default function OnboardingPage() {
             </Button>
           ) : (
             <Button onClick={handleComplete} disabled={isLoading}>
-              {isLoading ? "Setting up..." : "Enter Blossom"}
+              {isLoading ? "Saving..." : "Create Account"}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           )}

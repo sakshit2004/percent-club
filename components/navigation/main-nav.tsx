@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sparkles, Target, Zap, Bot, Users, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/components/auth/auth-provider"
+import { createClient } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
 
 const navigation = [
   { name: "Pods", href: "/pods", icon: Target },
@@ -25,9 +28,36 @@ const navigation = [
 
 export function MainNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, loading } = useAuth()
+  const [profile, setProfile] = useState<{ display_name?: string } | null>(null)
+  const supabase = createClient()
 
-  // Don't show nav on landing or onboarding pages
-  if (pathname === "/" || pathname === "/onboarding") {
+  useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        const { data } = await supabase.from("profiles").select("display_name").eq("id", user.id).single()
+        setProfile(data)
+      }
+      fetchProfile()
+    }
+  }, [user, supabase])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/")
+  }
+
+  // Don't show nav on landing, onboarding, or auth pages
+  if (pathname === "/" || pathname === "/onboarding" || pathname.startsWith("/auth")) {
+    return null
+  }
+
+  if (loading) {
+    return null
+  }
+
+  if (!user) {
     return null
   }
 
@@ -71,22 +101,30 @@ export function MainNav() {
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/diverse-user-avatars.png" alt="User" />
-                <AvatarFallback>SC</AvatarFallback>
+                <AvatarFallback>
+                  {profile?.display_name
+                    ? profile.display_name.slice(0, 2).toUpperCase()
+                    : user.email?.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Sarah Chen</p>
-                <p className="text-xs leading-none text-muted-foreground">@savingsstar</p>
+                <p className="text-sm font-medium leading-none">{profile?.display_name || user.email}</p>
+                <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/profile/me">
                 <Avatar className="h-4 w-4 mr-2">
-                  <AvatarFallback className="text-xs">SC</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {profile?.display_name
+                      ? profile.display_name.slice(0, 2).toUpperCase()
+                      : user.email?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 Profile
               </Link>
@@ -98,7 +136,7 @@ export function MainNav() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Log out
             </DropdownMenuItem>
