@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -25,6 +26,8 @@ const mockInflows: Record<string, Inflow[]> = {
 }
 
 export default function PodsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: pods, isLoading, error } = usePods()
   const createPodMutation = useCreatePod()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -57,6 +60,15 @@ export default function PodsPage() {
     // TODO: Implement toggle featured functionality
     console.log("Toggle featured for pod:", podId)
   }
+
+  // If a `next` param is present (coming from the marketing header), route to it after landing on Pods
+  useEffect(() => {
+    const next = searchParams?.get("next")
+    if (next && next.startsWith("/")) {
+      // Use replace to avoid keeping the intermediary URL in history
+      router.replace(next)
+    }
+  }, [router, searchParams])
 
   if (isLoading) {
     return (

@@ -9,10 +9,11 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { QueryProvider } from "@/providers/query-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { MainNav } from "@/components/navigation/main-nav"
+import { SiteFooter } from "@/components/navigation/site-footer"
 
 export const metadata: Metadata = {
-  title: "Blossom for Savings",
-  description: "Save smarter with Pods, Challenges, and your AI Agent",
+  title: "percentclub",
+  description: "percentclub — save smarter with Pods, Challenges, and your AI Agent",
   generator: "v0.app",
 }
 
@@ -29,6 +30,7 @@ export default function RootLayout({
             <QueryProvider>
               <MainNav />
               {children}
+              <SiteFooter />
               <Toaster />
             </QueryProvider>
           </ThemeProvider>

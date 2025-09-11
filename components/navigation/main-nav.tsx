@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -12,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Sparkles, Target, Zap, Bot, Users, Settings, LogOut } from "lucide-react"
+import { Target, Zap, Bot, Users, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigation = [
@@ -21,13 +22,27 @@ const navigation = [
   { name: "Agent", href: "/agent", icon: Bot },
   { name: "Feed", href: "/feed", icon: Users },
   { name: "Communities", href: "/communities", icon: Users },
+  // Marketing/Info pages
+  { name: "About Us", href: "/about" },
+  { name: "What We Offer", href: "/offerings" },
+  { name: "How It Works", href: "/how-it-works" },
+  { name: "Pricing", href: "/pricing" },
 ]
 
 export function MainNav() {
   const pathname = usePathname()
 
-  // Don't show nav on landing or onboarding pages
-  if (pathname === "/" || pathname === "/onboarding") {
+  // Hide app nav on marketing and pre-auth pages
+  const hideOn = [
+    "/",
+    "/onboarding",
+    "/about",
+    "/offerings",
+    "/how-it-works",
+    "/pricing",
+    "/learn/challenges",
+  ]
+  if (hideOn.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return null
   }
 
@@ -36,16 +51,14 @@ export function MainNav() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/pods" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold">Blossom</span>
+          <Image src="/percentclub-logo.svg" alt="percentclub logo" width={40} height={40} priority />
+          <span className="text-xl font-bold">percentclub</span>
         </Link>
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navigation.map((item) => {
-            const Icon = item.icon
+            const Icon = item.icon as any
             const isActive = pathname.startsWith(item.href)
 
             return (
@@ -57,7 +70,7 @@ export function MainNav() {
                 className={cn("gap-2", isActive && "bg-primary/10 text-primary")}
               >
                 <Link href={item.href}>
-                  <Icon className="h-4 w-4" />
+                  {Icon ? <Icon className="h-4 w-4" /> : null}
                   {item.name}
                 </Link>
               </Button>
