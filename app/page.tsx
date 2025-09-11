@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Coins, Target, Bot, ArrowRight, Sparkles } from "lucide-react"
+import { Coins, Target, Bot, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function LandingPage() {
   return (
@@ -11,10 +12,15 @@ export default function LandingPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold">Blossom</span>
+            <Image src="/percentclub-logo.svg" alt="percentclub logo" width={44} height={44} priority />
+            <span className="text-xl font-bold">percentclub</span>
+          </div>
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">About Us</Link>
+            <Link href="/offerings" className="text-sm text-muted-foreground hover:text-foreground">What We Offer</Link>
+            <Link href="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground">How It Works</Link>
+            <Link href="/learn/challenges" className="text-sm text-muted-foreground hover:text-foreground">Challenges</Link>
+            <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground">Pricing</Link>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
@@ -58,8 +64,8 @@ export default function LandingPage() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Three powerful ways to save</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Blossom combines goal-based savings, automated challenges, and AI-powered insights to help you build better
-            financial habits.
+            percentclub combines goal-based savings, automated challenges, and AI-powered insights to help you build
+            better financial habits.
           </p>
         </div>
 
@@ -137,8 +143,8 @@ export default function LandingPage() {
           <CardContent className="p-8 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to start saving smarter?</h2>
             <p className="text-primary-foreground/80 mb-6 max-w-2xl mx-auto">
-              Join thousands of users who have transformed their savings habits with Blossom. No money custody, complete
-              privacy, and always free to start.
+              Join thousands of users who have transformed their savings habits with percentclub. No money custody,
+              complete privacy, and always free to start.
             </p>
             <Button size="lg" variant="secondary" asChild>
               <Link href="/onboarding">
@@ -150,20 +156,7 @@ export default function LandingPage() {
         </Card>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-muted/50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
-                <Sparkles className="h-3 w-3 text-primary-foreground" />
-              </div>
-              <span className="font-semibold">Blossom for Savings</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Privacy by design. No money custody. Always secure.</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer moved to global layout via <SiteFooter /> */}
     </div>
   )
 }

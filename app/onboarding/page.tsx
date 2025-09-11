@@ -40,14 +40,19 @@ export default function OnboardingPage() {
   const progress = (currentStep / totalSteps) * 100
 
   const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
-    }
+    setCurrentStep((s) => (s < totalSteps ? s + 1 : s))
   }
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep((s) => Math.max(1, s - 1))
+    } else {
+      // Step 1: go back to previous page or landing
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back()
+      } else {
+        router.push("/")
+      }
     }
   }
 
@@ -56,7 +61,7 @@ export default function OnboardingPage() {
     // Simulate API call
     setTimeout(() => {
       toast({
-        title: "Welcome to Blossom!",
+        title: "Welcome to percentclub!",
         description: "Your account has been set up successfully. Let's start saving!",
       })
       router.push("/pods")
@@ -64,7 +69,7 @@ export default function OnboardingPage() {
   }
 
   const handleSkipPod = () => {
-    setCurrentStep(4) // Skip to final step
+    setCurrentStep(() => 4) // Skip to final step
   }
 
   const canProceedStep1 = data.alias.trim().length >= 2
@@ -77,10 +82,13 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold">Blossom</span>
+            <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M30 16a14 14 0 1 1-4.5-10.3l-3 3A10 10 0 1 0 20 16h10z" fill="#2f6df6"/>
+              <circle cx="12" cy="11" r="2" fill="#39c16c"/>
+              <circle cx="18" cy="19" r="2" fill="#39c16c"/>
+              <rect x="14" y="10" width="3" height="10" transform="rotate(45 15.5 15)" rx="1" fill="#39c16c"/>
+            </svg>
+            <span className="text-2xl font-bold">percentclub</span>
           </div>
           <h1 className="text-3xl font-bold mb-2">Welcome to your savings journey!</h1>
           <p className="text-muted-foreground">Let's get you set up in just a few steps</p>
@@ -212,7 +220,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <Button variant="outline" onClick={handleSkipPod} className="text-sm bg-transparent">
+                  <Button type="button" variant="outline" onClick={handleSkipPod} className="text-sm bg-transparent">
                     Skip for now - I'll create pods later
                   </Button>
                 </div>
@@ -263,13 +271,14 @@ export default function OnboardingPage() {
 
         {/* Navigation */}
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
+          <Button type="button" variant="outline" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
 
           {currentStep < totalSteps ? (
             <Button
+              type="button"
               onClick={handleNext}
               disabled={
                 (currentStep === 1 && !canProceedStep1) ||
@@ -281,8 +290,8 @@ export default function OnboardingPage() {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={handleComplete} disabled={isLoading}>
-              {isLoading ? "Setting up..." : "Enter Blossom"}
+            <Button type="button" onClick={handleComplete} disabled={isLoading}>
+              {isLoading ? "Setting up..." : "Enter percentclub"}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           )}
