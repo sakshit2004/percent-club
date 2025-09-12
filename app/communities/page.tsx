@@ -1,95 +1,133 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { CommunityCard } from "@/components/social/community-card"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
-import { Search, Users } from "lucide-react"
-import type { Community } from "@/types"
+import { Search, Users, TrendingUp, Filter, Plus } from "lucide-react"
+import type { Community, LeaderboardEntry } from "@/types"
 
 // Mock data
 const mockCommunities: Community[] = [
   {
     id: "1",
-    name: "Emergency Fund Heroes",
-    description:
-      "Building emergency funds together, one dollar at a time. Share your progress, get motivated, and learn from others who've successfully built their safety net.",
+    name: "Education Savers",
+    description: "From textbooks to tuition — % at a time",
     membersCount: 1234,
-    isJoined: false,
+    isJoined: true,
     avatar: "/emergency-fund-icon.png",
   },
   {
     id: "2",
-    name: "Challenge Champions",
-    description:
-      "Masters of savings challenges and automation. From 52-week challenges to round-ups, we're here to gamify your savings journey.",
+    name: "52-Week Challengers",
+    description: "Steady, increasing weekly saves",
     membersCount: 567,
-    isJoined: true,
+    isJoined: false,
     avatar: "/challenge-icon.jpg",
   },
   {
     id: "3",
-    name: "Vacation Savers",
-    description:
-      "Planning your next adventure? Join fellow travelers who are saving smart for their dream trips. Share destinations, deals, and savings strategies.",
+    name: "Round-Up Ninjas",
+    description: "Pennies to progress",
     membersCount: 892,
-    isJoined: false,
+    isJoined: true,
     avatar: "/vacation-icon.png",
   },
   {
     id: "4",
-    name: "First-Time Savers",
-    description:
-      "New to saving? This supportive community is perfect for beginners. Get tips, ask questions, and celebrate your first milestones with us.",
-    membersCount: 2156,
+    name: "Travel Light",
+    description: "Trips without the guilt",
+    membersCount: 445,
     isJoined: false,
     avatar: "/beginner-icon.jpg",
   },
   {
     id: "5",
-    name: "AI Agent Power Users",
-    description:
-      "Get the most out of your AI savings assistant. Share tips, tricks, and success stories about subscription reviews, deal finding, and smart saving suggestions.",
-    membersCount: 445,
-    isJoined: true,
+    name: "Debt Snowball Crew",
+    description: "Little wins, big momentum",
+    membersCount: 678,
+    isJoined: false,
     avatar: "/ai-icon.png",
   },
   {
     id: "6",
-    name: "Goal Crushers",
-    description:
-      "For serious savers with ambitious goals. Whether it's a house down payment, debt payoff, or early retirement, we're here to help you crush your financial goals.",
-    membersCount: 678,
+    name: "Emergency Fund Heroes",
+    description: "Building emergency funds together, one dollar at a time",
+    membersCount: 2156,
     isJoined: false,
     avatar: "/goal-icon.png",
   },
 ]
 
+const mockTopMembers: LeaderboardEntry[] = [
+  { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
+  { rank: 2, handle: "budgetboss", alias: "Mike Rodriguez", progress: 45, streak: 8 },
+  { rank: 3, handle: "goaldigger", alias: "Emma Thompson", progress: 42, streak: 15 },
+]
+
 export default function CommunitiesPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [filter, setFilter] = useState("all")
+  const [category, setCategory] = useState("all")
+  const [communities, setCommunities] = useState(mockCommunities)
+  const [isMobile, setIsMobile] = useState(false)
   const { toast } = useToast()
 
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   const handleJoin = (communityId: string) => {
-    const community = mockCommunities.find((c) => c.id === communityId)
+    setCommunities(prev => prev.map(community => 
+      community.id === communityId 
+        ? { ...community, isJoined: true }
+        : community
+    ))
+    const community = communities.find((c) => c.id === communityId)
     toast({
-      title: "Joined Community",
-      description: `Welcome to ${community?.name}! You'll now see posts from this community in your feed.`,
+      title: `Joined ${community?.name} — welcome!`,
+      description: "You'll now see posts from this community in your feed.",
     })
   }
 
   const handleLeave = (communityId: string) => {
-    const community = mockCommunities.find((c) => c.id === communityId)
+    setCommunities(prev => prev.map(community => 
+      community.id === communityId 
+        ? { ...community, isJoined: false }
+        : community
+    ))
+    const community = communities.find((c) => c.id === communityId)
     toast({
-      title: "Left Community",
-      description: `You've left ${community?.name}. You can rejoin anytime.`,
+      title: `Left ${community?.name}`,
+      description: "You can rejoin anytime.",
     })
   }
 
-  const filteredCommunities = mockCommunities.filter(
-    (community) =>
-      community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      community.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredCommunities = communities.filter((community) => {
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      if (!community.name.toLowerCase().includes(query) && 
+          !community.description.toLowerCase().includes(query)) {
+        return false
+      }
+    }
+
+    // Filter by status
+    if (filter === "joined") return community.isJoined
+    if (filter === "trending") return community.membersCount > 1000
+
+    return true
+  })
 
   const joinedCommunities = filteredCommunities.filter((c) => c.isJoined)
   const availableCommunities = filteredCommunities.filter((c) => !c.isJoined)
@@ -107,48 +145,233 @@ export default function CommunitiesPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-8">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search communities..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex gap-8">
+        {/* Main Content */}
+        <div className="flex-1">
+          {/* Search and Filters */}
+          <div className="space-y-4 mb-8">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Find communities"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <div className="flex gap-1">
+                <Button
+                  variant={filter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  variant={filter === "joined" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("joined")}
+                >
+                  Joined
+                </Button>
+                <Button
+                  variant={filter === "trending" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("trending")}
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Trending
+                </Button>
+              </div>
+              
+              <div className="flex gap-1 ml-auto">
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-1" />
+                  Education
+                </Button>
+                <Button variant="outline" size="sm">
+                  Housing
+                </Button>
+                <Button variant="outline" size="sm">
+                  52-Week
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Communities Grid */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredCommunities.map((community) => (
+              <CommunityCard
+                key={community.id}
+                community={community}
+                onJoin={handleJoin}
+                onLeave={handleLeave}
+                topMembers={mockTopMembers}
+              />
+            ))}
+          </div>
+
+          {filteredCommunities.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">No communities found</h3>
+              <p className="text-muted-foreground mb-4">Try adjusting your search terms or filters.</p>
+              <Button>Create Community</Button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Rail (Desktop) */}
+        {!isMobile && (
+          <div className="w-80 space-y-6">
+            {/* Quick Stats */}
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">Your Communities</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Joined</span>
+                    <span className="font-medium">{joinedCommunities.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Total Members</span>
+                    <span className="font-medium">
+                      {joinedCommunities.reduce((sum, c) => sum + c.membersCount, 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">This Week</span>
+                    <span className="font-medium">+12 posts</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top Communities */}
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">Top Communities</h3>
+                <div className="space-y-3">
+                  {communities
+                    .sort((a, b) => b.membersCount - a.membersCount)
+                    .slice(0, 5)
+                    .map((community) => (
+                      <div key={community.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={community.avatar} />
+                            <AvatarFallback>{community.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">{community.name}</p>
+                            <p className="text-xs text-muted-foreground">{community.membersCount} members</p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant={community.isJoined ? "outline" : "default"}>
+                          {community.isJoined ? "Joined" : "Join"}
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
-      {/* Joined Communities */}
-      {joinedCommunities.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Your Communities ({joinedCommunities.length})</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {joinedCommunities.map((community) => (
-              <CommunityCard key={community.id} community={community} onJoin={handleJoin} onLeave={handleLeave} />
+      {/* Privacy Note */}
+      <div className="mt-8 text-center">
+        <p className="text-xs text-muted-foreground">
+          Public shows % only. Balances stay private.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// Community Card Component
+interface CommunityCardProps {
+  community: Community
+  onJoin: (communityId: string) => void
+  onLeave: (communityId: string) => void
+  topMembers: LeaderboardEntry[]
+}
+
+function CommunityCard({ community, onJoin, onLeave, topMembers }: CommunityCardProps) {
+  const handleJoinLeave = () => {
+    if (community.isJoined) {
+      onLeave(community.id)
+    } else {
+      onJoin(community.id)
+    }
+  }
+
+  return (
+    <Card className="rounded-2xl hover:shadow-md transition-shadow">
+      <CardContent className="p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={community.avatar} />
+              <AvatarFallback>{community.name[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold text-lg">{community.name}</h3>
+              <p className="text-sm text-muted-foreground">{community.description}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <p className="font-semibold">{community.membersCount.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">members</p>
+            </div>
+            <div className="text-center">
+              <p className="font-semibold">Active</p>
+              <p className="text-xs text-muted-foreground">this week</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {community.membersCount > 1000 ? "Trending" : "Growing"}
+          </Badge>
+        </div>
+
+        {/* Top Members Preview */}
+        <div className="mb-4">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Top this week</p>
+          <div className="flex items-center gap-2">
+            {topMembers.slice(0, 3).map((member) => (
+              <div key={member.handle} className="flex items-center gap-1">
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-xs">{member.alias[0]}</AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-muted-foreground">{member.progress}%</span>
+              </div>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Available Communities */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">
-          {joinedCommunities.length > 0 ? "Discover More" : "All Communities"} ({availableCommunities.length})
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          {availableCommunities.map((community) => (
-            <CommunityCard key={community.id} community={community} onJoin={handleJoin} onLeave={handleLeave} />
-          ))}
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Button
+            variant={community.isJoined ? "outline" : "default"}
+            className="flex-1"
+            onClick={handleJoinLeave}
+          >
+            {community.isJoined ? "Leave" : "Join"}
+          </Button>
+          <Button variant="outline" size="sm">
+            View
+          </Button>
         </div>
-      </div>
-
-      {filteredCommunities.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-semibold mb-2">No communities found</h3>
-          <p className="text-muted-foreground">Try adjusting your search terms.</p>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   )
 }

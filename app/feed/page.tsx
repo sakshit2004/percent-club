@@ -1,13 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PostComposer } from "@/components/social/post-composer"
-import { PostItem } from "@/components/social/post-item"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
-import { Sparkles } from "lucide-react"
-import type { Post } from "@/types"
+import { 
+  Sparkles, 
+  Search, 
+  Send, 
+  ThumbsUp, 
+  MessageCircle, 
+  Bookmark, 
+  MoreHorizontal,
+  Plus,
+  TrendingUp,
+  Users,
+  UserPlus,
+  UserMinus,
+  Flag,
+  Eye,
+  EyeOff,
+  Heart,
+  Share2
+} from "lucide-react"
+import type { Post, Community, Pod, LeaderboardEntry } from "@/types"
 
 // Mock data
 const mockFeedPosts: Post[] = [
@@ -16,9 +39,8 @@ const mockFeedPosts: Post[] = [
     authorHandle: "savingsstar",
     authorAlias: "Sarah Chen",
     authorAvatar: "/diverse-woman-avatar.png",
-    content:
-      "Just hit 68% on my emergency fund goal! The round-up challenge has been a game changer. Small amounts really do add up over time.",
-    tags: ["milestone", "emergency-fund", "roundups"],
+    content: "Just hit 68% on my emergency fund goal! The round-up challenge has been a game changer. Small amounts really do add up over time.",
+    tags: ["#roundups", "#milestone", "#emergency-fund"],
     visibility: "public",
     reactions: 12,
     hasReacted: false,
@@ -29,9 +51,8 @@ const mockFeedPosts: Post[] = [
     authorHandle: "budgetboss",
     authorAlias: "Mike Rodriguez",
     authorAvatar: "/man-avatar.png",
-    content:
-      "Week 15 of the 52-week challenge complete! Already saved $120 and it's getting easier each week. Who else is doing this challenge?",
-    tags: ["52-week", "challenge", "progress"],
+    content: "Week 15 of the 52-week challenge complete! Already saved $120 and it's getting easier each week. Who else is doing this challenge?",
+    tags: ["#52week", "#challenge", "#progress"],
     visibility: "public",
     reactions: 8,
     hasReacted: true,
@@ -42,9 +63,8 @@ const mockFeedPosts: Post[] = [
     authorHandle: "goaldigger",
     authorAlias: "Emma Thompson",
     authorAvatar: "/woman-avatar-2.png",
-    content:
-      "My AI agent found me $45 in subscription savings this month! Cancelled two services I forgot about and switched to a cheaper phone plan.",
-    tags: ["ai-agent", "subscriptions", "savings"],
+    content: "My AI agent found me $45 in subscription savings this month! Cancelled two services I forgot about and switched to a cheaper phone plan.",
+    tags: ["#ai-agent", "#subscriptions", "#savings"],
     visibility: "public",
     reactions: 15,
     hasReacted: false,
@@ -55,32 +75,144 @@ const mockFeedPosts: Post[] = [
     authorHandle: "frugalfriend",
     authorAlias: "Alex Kim",
     authorAvatar: "/diverse-person-avatars.png",
-    content:
-      "Vacation fund is at 85%! Thanks to everyone in the Challenge Champions community for the motivation. Two more months and I'm off to Japan! 🎌",
-    tags: ["vacation", "goals", "community"],
+    content: "Vacation fund is at 85%! Thanks to everyone in the Challenge Champions community for the motivation. Two more months and I'm off to Japan! 🎌",
+    tags: ["#vacation", "#goals", "#community"],
     visibility: "followers",
     reactions: 22,
     hasReacted: false,
     createdAt: "2024-01-14T16:10:00Z",
   },
+  {
+    id: "5",
+    authorHandle: "cashbackqueen",
+    authorAlias: "Lisa Park",
+    authorAvatar: "/woman-avatar-3.png",
+    content: "Pro tip: Set up cashback alerts for your favorite stores. I've earned $23 this month just from regular shopping!",
+    tags: ["#cashback", "#tips", "#shopping"],
+    visibility: "public",
+    reactions: 6,
+    hasReacted: false,
+    createdAt: "2024-01-14T12:15:00Z",
+  },
+  {
+    id: "6",
+    authorHandle: "debtfree2024",
+    authorAlias: "James Wilson",
+    authorAvatar: "/man-avatar-2.png",
+    content: "Education pod: 42% → 45% this week! The weekly auto-save is working perfectly. Can't wait to hit 50%!",
+    tags: ["#education", "#autosave", "#progress"],
+    visibility: "public",
+    reactions: 9,
+    hasReacted: true,
+    createdAt: "2024-01-14T08:30:00Z",
+  },
+]
+
+const mockCommunities: Community[] = [
+  {
+    id: "1",
+    name: "Education Savers",
+    description: "From textbooks to tuition — % at a time",
+    membersCount: 1234,
+    isJoined: true,
+    avatar: "/emergency-fund-icon.png",
+  },
+  {
+    id: "2",
+    name: "52-Week Challengers",
+    description: "Steady, increasing weekly saves",
+    membersCount: 567,
+    isJoined: false,
+    avatar: "/challenge-icon.jpg",
+  },
+  {
+    id: "3",
+    name: "Round-Up Ninjas",
+    description: "Pennies to progress",
+    membersCount: 892,
+    isJoined: true,
+    avatar: "/vacation-icon.png",
+  },
+]
+
+const mockPods: Pod[] = [
+  {
+    id: "1",
+    name: "Education",
+    targetAmount: 15000,
+    currentAmount: 6300,
+    targetDate: "2025-06-01",
+    isFeatured: true,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-15T00:00:00Z",
+  },
+  {
+    id: "2",
+    name: "Travel",
+    targetAmount: 5000,
+    currentAmount: 750,
+    targetDate: "2024-12-15",
+    isFeatured: false,
+    createdAt: "2024-02-01T00:00:00Z",
+    updatedAt: "2024-02-15T00:00:00Z",
+  },
+]
+
+const mockLeaderboard: LeaderboardEntry[] = [
+  { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
+  { rank: 2, handle: "budgetboss", alias: "Mike Rodriguez", progress: 45, streak: 8 },
+  { rank: 3, handle: "goaldigger", alias: "Emma Thompson", progress: 42, streak: 15 },
+  { rank: 4, handle: "frugalfriend", alias: "Alex Kim", progress: 85, streak: 6 },
+  { rank: 5, handle: "cashbackqueen", alias: "Lisa Park", progress: 38, streak: 9 },
 ]
 
 const mockUser = {
   avatar: "/diverse-user-avatars.png",
   alias: "You",
+  handle: "you",
+  level: 3,
 }
 
 export default function FeedPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const [filter, setFilter] = useState("all")
+  const [filter, setFilter] = useState("foryou")
+  const [sort, setSort] = useState("top")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [posts, setPosts] = useState(mockFeedPosts)
+  const [isMobile, setIsMobile] = useState(false)
+  const [commentsOpen, setCommentsOpen] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const handlePost = (content: string, tags: string[], visibility: "public" | "followers") => {
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const handlePost = (content: string, tags: string[], visibility: "public" | "followers" | "community", communityId?: string, podProgress?: { podId: string, fromPercent: number, toPercent: number }) => {
     setIsLoading(true)
-    // Simulate API call
+    
+    const newPost: Post = {
+      id: Date.now().toString(),
+      authorHandle: mockUser.handle,
+      authorAlias: mockUser.alias,
+      authorAvatar: mockUser.avatar,
+      content,
+      tags,
+      visibility,
+      reactions: 0,
+      hasReacted: false,
+      createdAt: new Date().toISOString(),
+    }
+
     setTimeout(() => {
+      setPosts(prev => [newPost, ...prev])
       toast({
-        title: "Post Created",
+        title: "Posted — nice one!",
         description: "Your post has been shared with the community!",
       })
       setIsLoading(false)
@@ -88,24 +220,95 @@ export default function FeedPage() {
   }
 
   const handleReact = (postId: string) => {
+    setPosts(prev => prev.map(post => 
+      post.id === postId 
+        ? { 
+            ...post, 
+            hasReacted: !post.hasReacted,
+            reactions: post.hasReacted ? post.reactions - 1 : post.reactions + 1
+          }
+        : post
+    ))
+  }
+
+  const handleSave = (postId: string) => {
     toast({
-      title: "Reaction Added",
-      description: "You liked this post!",
+      title: "Saved to your list",
+      description: "Post has been bookmarked.",
     })
   }
 
-  const handleShare = (postId: string) => {
+  const handleFollow = (handle: string) => {
     toast({
-      title: "Post Shared",
-      description: "Post copied to clipboard!",
+      title: `You're now following @${handle}`,
+      description: "You'll see their posts in your Following feed.",
     })
   }
 
-  const filteredPosts = mockFeedPosts.filter((post) => {
-    if (filter === "communities") return post.tags.includes("community") || post.tags.includes("challenge")
-    if (filter === "people") return !post.tags.includes("community")
-    return true
-  })
+  const handleUnfollow = (handle: string) => {
+    toast({
+      title: `Unfollowed @${handle}`,
+      description: "You won't see their posts in your Following feed anymore.",
+    })
+  }
+
+  const handleReport = (postId: string) => {
+    toast({
+      title: "Thanks, we'll review",
+      description: "We've received your report and will look into it.",
+    })
+  }
+
+  const handleHide = (postId: string) => {
+    setPosts(prev => prev.filter(post => post.id !== postId))
+    toast({
+      title: "Post removed from your feed",
+      description: "This post has been hidden from your view.",
+    })
+  }
+
+  const handleDelete = (postId: string) => {
+    setPosts(prev => prev.filter(post => post.id !== postId))
+    toast({
+      title: "Post deleted",
+      description: "Your post has been removed.",
+    })
+  }
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        if (!post.content.toLowerCase().includes(query) && 
+            !post.tags.some(tag => tag.toLowerCase().includes(query)) &&
+            !post.authorAlias.toLowerCase().includes(query)) {
+          return false
+        }
+      }
+
+      // Filter by type
+      if (filter === "following") {
+        // In real app, this would check if user follows the author
+        return post.visibility === "followers" || post.authorHandle === mockUser.handle
+      }
+      if (filter === "communities") {
+        return post.tags.some(tag => tag.includes("community") || tag.includes("challenge"))
+      }
+      
+      return true
+    })
+  }, [posts, searchQuery, filter])
+
+  const sortedPosts = useMemo(() => {
+    return [...filteredPosts].sort((a, b) => {
+      if (sort === "new") {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      }
+      // Top (by reactions)
+      return b.reactions - a.reactions
+    })
+  }, [filteredPosts, sort])
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -116,55 +319,625 @@ export default function FeedPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold">Feed</h1>
-          <p className="text-muted-foreground">See what the community is up to</p>
+          <p className="text-muted-foreground">Share tips, wins, and progress with the community</p>
         </div>
       </div>
 
-      {/* Post Composer */}
-      <div className="mb-8">
-        <PostComposer
-          userAvatar={mockUser.avatar}
-          userAlias={mockUser.alias}
-          onPost={handlePost}
-          isLoading={isLoading}
-        />
+      <div className="flex gap-8">
+        {/* Main Content */}
+        <div className="flex-1 max-w-2xl">
+          {/* Search */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search tips, #tags, people…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Filters and Sort */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex gap-1">
+              <Button
+                variant={filter === "foryou" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("foryou")}
+              >
+                For You
+              </Button>
+              <Button
+                variant={filter === "following" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("following")}
+              >
+                Following
+              </Button>
+              <Button
+                variant={filter === "communities" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("communities")}
+              >
+                Communities
+              </Button>
+            </div>
+            <div className="flex gap-1 ml-auto">
+              <Button
+                variant={sort === "top" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSort("top")}
+              >
+                Top
+              </Button>
+              <Button
+                variant={sort === "new" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSort("new")}
+              >
+                New
+              </Button>
+            </div>
+          </div>
+
+          {/* Post Composer */}
+          <PostComposer
+            userAvatar={mockUser.avatar}
+            userAlias={mockUser.alias}
+            onPost={handlePost}
+            isLoading={isLoading}
+            communities={mockCommunities}
+            pods={mockPods}
+          />
+
+          {/* Timeline */}
+          <div className="space-y-4 mt-6">
+            {sortedPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onReact={handleReact}
+                onSave={handleSave}
+                onFollow={handleFollow}
+                onUnfollow={handleUnfollow}
+                onReport={handleReport}
+                onHide={handleHide}
+                onDelete={handleDelete}
+                onOpenComments={() => setCommentsOpen(post.id)}
+                isOwner={post.authorHandle === mockUser.handle}
+              />
+            ))}
+          </div>
+
+          {sortedPosts.length === 0 && (
+            <div className="text-center py-12">
+              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">No posts yet</h3>
+              <p className="text-muted-foreground mb-4">
+                {filter === "following" 
+                  ? "You're not following anyone yet — explore Communities"
+                  : "Be the first to share a tip or win!"
+                }
+              </p>
+              <Button>Discover Communities</Button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Rail (Desktop) */}
+        {!isMobile && (
+          <div className="w-80 space-y-6">
+            {/* Suggested Communities */}
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">Suggested Communities</h3>
+                <div className="space-y-3">
+                  {mockCommunities.slice(0, 3).map((community) => (
+                    <div key={community.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={community.avatar} />
+                          <AvatarFallback>{community.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-sm">{community.name}</p>
+                          <p className="text-xs text-muted-foreground">{community.membersCount} members</p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant={community.isJoined ? "outline" : "default"}>
+                        {community.isJoined ? "Joined" : "Join"}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Leaderboard */}
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">Leaderboard (this week)</h3>
+                <div className="space-y-3">
+                  {mockLeaderboard.slice(0, 5).map((entry) => (
+                    <div key={entry.rank} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                          {entry.rank}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{entry.alias}</p>
+                          <p className="text-xs text-muted-foreground">@{entry.handle}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-sm">{entry.progress}%</p>
+                        <p className="text-xs text-muted-foreground">normalized by %</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* People to Follow */}
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">People to Follow</h3>
+                <div className="space-y-3">
+                  {mockLeaderboard.slice(0, 3).map((entry) => (
+                    <div key={entry.handle} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{entry.alias[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-sm">{entry.alias}</p>
+                          <p className="text-xs text-muted-foreground">@{entry.handle}</p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline">
+                        <UserPlus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
-      {/* Filter Tabs */}
-      <Tabs value={filter} onValueChange={setFilter} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="all">All Posts</TabsTrigger>
-          <TabsTrigger value="communities">Communities</TabsTrigger>
-          <TabsTrigger value="people">People</TabsTrigger>
-        </TabsList>
+      {/* Comments Drawer */}
+      <CommentsDrawer
+        isOpen={!!commentsOpen}
+        onClose={() => setCommentsOpen(null)}
+        postId={commentsOpen || ""}
+      />
 
-        <TabsContent value="all" className="space-y-4">
-          {filteredPosts.map((post) => (
-            <PostItem key={post.id} post={post} onReact={handleReact} onShare={handleShare} />
-          ))}
-        </TabsContent>
-
-        <TabsContent value="communities" className="space-y-4">
-          {filteredPosts.map((post) => (
-            <PostItem key={post.id} post={post} onReact={handleReact} onShare={handleShare} />
-          ))}
-        </TabsContent>
-
-        <TabsContent value="people" className="space-y-4">
-          {filteredPosts.map((post) => (
-            <PostItem key={post.id} post={post} onReact={handleReact} onShare={handleShare} />
-          ))}
-        </TabsContent>
-      </Tabs>
-
-      {filteredPosts.length === 0 && (
-        <div className="text-center py-12">
-          <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-semibold mb-2">No posts yet</h3>
-          <p className="text-muted-foreground mb-4">Follow some users or join communities to see posts in your feed.</p>
-          <Button>Discover Communities</Button>
-        </div>
-      )}
+      {/* Privacy Note */}
+      <div className="mt-8 text-center">
+        <p className="text-xs text-muted-foreground">
+          Public shows % only. Balances stay private.
+        </p>
+      </div>
     </div>
+  )
+}
+
+// Post Composer Component
+interface PostComposerProps {
+  userAvatar: string
+  userAlias: string
+  onPost: (content: string, tags: string[], visibility: "public" | "followers" | "community", communityId?: string, podProgress?: { podId: string, fromPercent: number, toPercent: number }) => void
+  isLoading: boolean
+  communities: Community[]
+  pods: Pod[]
+}
+
+function PostComposer({ userAvatar, userAlias, onPost, isLoading, communities, pods }: PostComposerProps) {
+  const [content, setContent] = useState("")
+  const [tags, setTags] = useState<string[]>([])
+  const [visibility, setVisibility] = useState<"public" | "followers" | "community">("public")
+  const [selectedCommunity, setSelectedCommunity] = useState("")
+  const [showPodProgress, setShowPodProgress] = useState(false)
+  const [selectedPod, setSelectedPod] = useState("")
+  const [fromPercent, setFromPercent] = useState(0)
+  const [toPercent, setToPercent] = useState(0)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!content.trim()) return
+
+    const podProgress = showPodProgress && selectedPod ? {
+      podId: selectedPod,
+      fromPercent,
+      toPercent
+    } : undefined
+
+    onPost(content, tags, visibility, selectedCommunity || undefined, podProgress)
+    setContent("")
+    setTags([])
+    setVisibility("public")
+    setSelectedCommunity("")
+    setShowPodProgress(false)
+    setSelectedPod("")
+    setFromPercent(0)
+    setToPercent(0)
+  }
+
+  const addTag = (tag: string) => {
+    if (tag && !tags.includes(tag)) {
+      setTags([...tags, tag])
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove))
+  }
+
+  return (
+    <Card className="rounded-2xl">
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={userAvatar} />
+              <AvatarFallback>{userAlias[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <Textarea
+                placeholder="Share a savings tip, question, or win…"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-[100px] resize-none border-0 p-0 focus-visible:ring-0"
+              />
+            </div>
+          </div>
+
+          {/* Pod Progress Toggle */}
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPodProgress(!showPodProgress)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add % progress from a Pod
+            </Button>
+          </div>
+
+          {showPodProgress && (
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <div className="flex gap-2">
+                <Select value={selectedPod} onValueChange={setSelectedPod}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select pod" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pods.map((pod) => (
+                      <SelectItem key={pod.id} value={pod.id}>
+                        {pod.name} ({Math.round((pod.currentAmount / pod.targetAmount) * 100)}%)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="number"
+                  placeholder="From %"
+                  value={fromPercent || ""}
+                  onChange={(e) => setFromPercent(Number(e.target.value))}
+                  className="w-20"
+                />
+                <span>→</span>
+                <Input
+                  type="number"
+                  placeholder="To %"
+                  value={toPercent || ""}
+                  onChange={(e) => setToPercent(Number(e.target.value))}
+                  className="w-20"
+                />
+              </div>
+              {selectedPod && fromPercent && toPercent && (
+                <div className="text-sm text-muted-foreground">
+                  {pods.find(p => p.id === selectedPod)?.name} {fromPercent}% → {toPercent}%
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tags */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => removeTag(tag)}>
+                  {tag} ×
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addTag("#roundups")}
+              >
+                #roundups
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addTag("#52week")}
+              >
+                #52week
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addTag("#cashback")}
+              >
+                #cashback
+              </Button>
+            </div>
+          </div>
+
+          {/* Audience Selector */}
+          <div className="flex items-center justify-between">
+            <Select value={visibility} onValueChange={(value: "public" | "followers" | "community") => setVisibility(value)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="public">Public</SelectItem>
+                <SelectItem value="followers">Followers</SelectItem>
+                <SelectItem value="community">Post to Community</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {visibility === "community" && (
+              <Select value={selectedCommunity} onValueChange={setSelectedCommunity}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select community" />
+                </SelectTrigger>
+                <SelectContent>
+                  {communities.filter(c => c.isJoined).map((community) => (
+                    <SelectItem key={community.id} value={community.id}>
+                      {community.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            <Button type="submit" disabled={!content.trim() || isLoading}>
+              <Send className="h-4 w-4 mr-2" />
+              Post
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Post Card Component
+interface PostCardProps {
+  post: Post
+  onReact: (postId: string) => void
+  onSave: (postId: string) => void
+  onFollow: (handle: string) => void
+  onUnfollow: (handle: string) => void
+  onReport: (postId: string) => void
+  onHide: (postId: string) => void
+  onDelete: (postId: string) => void
+  onOpenComments: () => void
+  isOwner: boolean
+}
+
+function PostCard({ post, onReact, onSave, onFollow, onUnfollow, onReport, onHide, onDelete, onOpenComments, isOwner }: PostCardProps) {
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
+
+  const handleFollow = () => {
+    setIsFollowing(!isFollowing)
+    if (isFollowing) {
+      onUnfollow(post.authorHandle)
+    } else {
+      onFollow(post.authorHandle)
+    }
+  }
+
+  const handleSave = () => {
+    setIsSaved(!isSaved)
+    onSave(post.id)
+  }
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    
+    if (diffInHours < 1) return "now"
+    if (diffInHours < 24) return `${diffInHours}h`
+    return `${Math.floor(diffInHours / 24)}d`
+  }
+
+  return (
+    <Card className="rounded-2xl hover:shadow-md transition-shadow">
+      <CardContent className="p-6">
+        {/* Author Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={post.authorAvatar} />
+              <AvatarFallback>{post.authorAlias[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{post.authorAlias}</span>
+                <Badge variant="outline" className="text-xs">L3</Badge>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>@{post.authorHandle}</span>
+                <span>•</span>
+                <span>{formatTimeAgo(post.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {isOwner ? (
+                <DropdownMenuItem onClick={() => onDelete(post.id)}>
+                  Delete
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={handleFollow}>
+                    {isFollowing ? <UserMinus className="h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                    {isFollowing ? "Unfollow" : "Follow"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onReport(post.id)}>
+                    <Flag className="h-4 w-4 mr-2" />
+                    Report
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onHide(post.id)}>
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    Hide
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Post Content */}
+        <div className="mb-4">
+          <p className="text-sm leading-relaxed">{post.content}</p>
+        </div>
+
+        {/* Tags */}
+        {post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {post.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center gap-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onReact(post.id)}
+              className={post.hasReacted ? "text-primary" : ""}
+            >
+              <ThumbsUp className={`h-4 w-4 mr-2 ${post.hasReacted ? "fill-current" : ""}`} />
+              {post.reactions}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onOpenComments}>
+              <MessageCircle className="h-4 w-4 mr-2" />
+              3
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleSave} className={isSaved ? "text-primary" : ""}>
+              <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? "fill-current" : ""}`} />
+              Save
+            </Button>
+          </div>
+          <Button variant="ghost" size="sm">
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Comments Drawer Component
+interface CommentsDrawerProps {
+  isOpen: boolean
+  onClose: () => void
+  postId: string
+}
+
+function CommentsDrawer({ isOpen, onClose, postId }: CommentsDrawerProps) {
+  const [newComment, setNewComment] = useState("")
+
+  const mockComments = [
+    {
+      id: "1",
+      author: "budgetboss",
+      alias: "Mike Rodriguez",
+      avatar: "/man-avatar.png",
+      content: "Great tip! I've been doing this for 3 months now.",
+      createdAt: "2024-01-15T15:00:00Z",
+    },
+    {
+      id: "2",
+      author: "goaldigger",
+      alias: "Emma Thompson",
+      avatar: "/woman-avatar-2.png",
+      content: "Same here! The round-ups really add up faster than I expected.",
+      createdAt: "2024-01-15T15:30:00Z",
+    },
+  ]
+
+  if (!isOpen) return null
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>Comments</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="max-h-96 overflow-y-auto space-y-4">
+            {mockComments.map((comment) => (
+              <div key={comment.id} className="flex gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={comment.avatar} />
+                  <AvatarFallback>{comment.alias[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm">{comment.alias}</span>
+                    <span className="text-xs text-muted-foreground">@{comment.author}</span>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs text-muted-foreground">2h</span>
+                  </div>
+                  <p className="text-sm">{comment.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-3 pt-4 border-t">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback>Y</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <Textarea
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="min-h-[60px] resize-none"
+              />
+            </div>
+            <Button size="sm" disabled={!newComment.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

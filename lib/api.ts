@@ -2,26 +2,36 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Pod, Challenge } from "@/types"
 
 // Mock data - will be replaced with real API calls later
-const mockPods: Pod[] = [
+let mockPods: Pod[] = [
   {
     id: "1",
-    name: "Emergency Fund",
-    targetAmount: 5000,
-    currentAmount: 1250,
-    targetDate: "2024-12-31",
+    name: "Education",
+    targetAmount: 15000,
+    currentAmount: 4200,
+    targetDate: "2025-06-01",
     isFeatured: true,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-15T00:00:00Z",
   },
   {
     id: "2",
-    name: "Vacation Fund",
-    targetAmount: 3000,
-    currentAmount: 800,
-    targetDate: "2024-08-15",
+    name: "Travel",
+    targetAmount: 5000,
+    currentAmount: 1800,
+    targetDate: "2024-12-15",
     isFeatured: false,
     createdAt: "2024-02-01T00:00:00Z",
     updatedAt: "2024-02-15T00:00:00Z",
+  },
+  {
+    id: "3",
+    name: "Emergency Fund",
+    targetAmount: 10000,
+    currentAmount: 3200,
+    targetDate: "2024-12-31",
+    isFeatured: false,
+    createdAt: "2024-01-15T00:00:00Z",
+    updatedAt: "2024-01-20T00:00:00Z",
   },
 ]
 
@@ -114,6 +124,8 @@ export const useCreatePod = () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
+      // Add the new pod to the mock data
+      mockPods.push(newPod)
       return newPod
     },
     onSuccess: () => {
@@ -163,6 +175,61 @@ export const useConfigureChallenge = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["challenges"] })
+    },
+  })
+}
+
+export const useUpdatePod = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      podId,
+      updates,
+    }: {
+      podId: string
+      updates: Partial<Omit<Pod, "id" | "createdAt" | "updatedAt">>
+    }): Promise<Pod> => {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      const podIndex = mockPods.findIndex((pod) => pod.id === podId)
+      if (podIndex === -1) throw new Error("Pod not found")
+      
+      const updatedPod = {
+        ...mockPods[podIndex],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      }
+      mockPods[podIndex] = updatedPod
+      return updatedPod
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pods"] })
+    },
+  })
+}
+
+export const useDeletePod = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (podId: string): Promise<void> => {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const podIndex = mockPods.findIndex((pod) => pod.id === podId)
+      if (podIndex === -1) throw new Error("Pod not found")
+      mockPods.splice(podIndex, 1)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pods"] })
+    },
+  })
+}
+
+export const useExportPod = () => {
+  return useMutation({
+    mutationFn: async (podId: string): Promise<void> => {
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      // Mock export logic - would generate CSV
+      console.log(`Exporting pod ${podId} data`)
     },
   })
 }

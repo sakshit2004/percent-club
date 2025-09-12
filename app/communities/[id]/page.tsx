@@ -1,36 +1,39 @@
 "use client"
-import { useParams } from "next/navigation"
+
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CommunityCard } from "@/components/social/community-card"
-import { PostItem } from "@/components/social/post-item"
-import { Leaderboard } from "@/components/social/leaderboard"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Users } from "lucide-react"
-import Link from "next/link"
-import type { Community, Post, LeaderboardEntry } from "@/types"
+import { 
+  ArrowLeft, 
+  Users, 
+  Share2, 
+  TrendingUp
+} from "lucide-react"
+import type { Community, Post, LeaderboardEntry, Pod } from "@/types"
 
 // Mock data
 const mockCommunity: Community = {
   id: "1",
-  name: "Emergency Fund Heroes",
-  description:
-    "Building emergency funds together, one dollar at a time. Share your progress, get motivated, and learn from others who've successfully built their safety net. We believe that everyone deserves financial security, and we're here to support each other on this journey.",
+  name: "Education Savers",
+  description: "From textbooks to tuition — % at a time. Join fellow students and families saving for education goals.",
   membersCount: 1234,
-  isJoined: false,
+  isJoined: true,
   avatar: "/emergency-fund-icon.png",
 }
 
-const mockPosts: Post[] = [
+const mockCommunityPosts: Post[] = [
   {
     id: "1",
     authorHandle: "savingsstar",
     authorAlias: "Sarah Chen",
     authorAvatar: "/diverse-woman-avatar.png",
-    content:
-      "Just hit 68% on my emergency fund goal! The round-up challenge has been a game changer for building this safety net.",
-    tags: ["milestone", "emergency-fund", "roundups"],
+    content: "Just hit 68% on my education fund! The round-up challenge has been a game changer. Small amounts really do add up over time.",
+    tags: ["#roundups", "#milestone", "#education"],
     visibility: "public",
     reactions: 12,
     hasReacted: false,
@@ -38,134 +41,349 @@ const mockPosts: Post[] = [
   },
   {
     id: "2",
-    authorHandle: "steadysaver",
-    authorAlias: "David Park",
-    authorAvatar: "/man-avatar-2.png",
-    content:
-      "Reminder: Your emergency fund should cover 3-6 months of expenses. Don't get discouraged if it takes time to build - every dollar counts!",
-    tags: ["tips", "emergency-fund", "motivation"],
+    authorHandle: "budgetboss",
+    authorAlias: "Mike Rodriguez",
+    authorAvatar: "/man-avatar.png",
+    content: "Education pod: 42% → 45% this week! The weekly auto-save is working perfectly. Can't wait to hit 50%!",
+    tags: ["#education", "#autosave", "#progress"],
     visibility: "public",
-    reactions: 18,
+    reactions: 9,
     hasReacted: true,
-    createdAt: "2024-01-15T10:15:00Z",
+    createdAt: "2024-01-14T08:30:00Z",
   },
 ]
 
 const mockLeaderboard: LeaderboardEntry[] = [
-  {
-    rank: 1,
-    handle: "emergencyace",
-    alias: "Lisa Wong",
-    avatar: "/woman-avatar-3.png",
-    progress: 95,
-    streak: 45,
-  },
-  {
-    rank: 2,
-    handle: "savingsstar",
-    alias: "Sarah Chen",
-    avatar: "/diverse-woman-avatar.png",
-    progress: 68,
-    streak: 30,
-  },
-  {
-    rank: 3,
-    handle: "steadysaver",
-    alias: "David Park",
-    avatar: "/man-avatar-2.png",
-    progress: 52,
-    streak: 28,
-  },
+  { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
+  { rank: 2, handle: "budgetboss", alias: "Mike Rodriguez", progress: 45, streak: 8 },
+  { rank: 3, handle: "goaldigger", alias: "Emma Thompson", progress: 42, streak: 15 },
 ]
 
 export default function CommunityDetailPage() {
   const params = useParams()
-  const communityId = params.id as string
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("posts")
+  const [leaderboardType, setLeaderboardType] = useState("progress")
+  const [community, setCommunity] = useState(mockCommunity)
+  const [isMobile, setIsMobile] = useState(false)
   const { toast } = useToast()
 
-  const handleJoin = (communityId: string) => {
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const handleJoinLeave = () => {
+    setCommunity(prev => ({ ...prev, isJoined: !prev.isJoined }))
     toast({
-      title: "Joined Community",
-      description: `Welcome to ${mockCommunity.name}! You'll now see posts from this community in your feed.`,
+      title: community.isJoined ? "Left Education Savers" : "Joined — say hi!",
+      description: community.isJoined ? "You can rejoin anytime." : "Welcome to the community!",
     })
   }
 
-  const handleLeave = (communityId: string) => {
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href)
     toast({
-      title: "Left Community",
-      description: `You've left ${mockCommunity.name}. You can rejoin anytime.`,
-    })
-  }
-
-  const handleReact = (postId: string) => {
-    toast({
-      title: "Reaction Added",
-      description: "You liked this post!",
-    })
-  }
-
-  const handleShare = (postId: string) => {
-    toast({
-      title: "Post Shared",
-      description: "Post copied to clipboard!",
+      title: "Copied share link",
+      description: "Community link copied to clipboard.",
     })
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/communities">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Communities
-          </Link>
+      <div className="flex items-center gap-3 mb-8">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
         </Button>
-      </div>
-
-      {/* Community Info */}
-      <div className="mb-8">
-        <CommunityCard community={mockCommunity} onJoin={handleJoin} onLeave={handleLeave} showDescription={false} />
-        <div className="mt-4 p-4 bg-muted/20 rounded-lg">
-          <p className="text-sm leading-relaxed">{mockCommunity.description}</p>
+        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+          <Users className="h-4 w-4 text-primary-foreground" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold">{community.name}</h1>
+          <p className="text-muted-foreground">{community.description}</p>
         </div>
       </div>
 
-      {/* Content Tabs */}
-      <Tabs defaultValue="posts" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="posts">
-            Posts
-            <Badge variant="secondary" className="ml-2">
-              {mockPosts.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="leaderboard">
-            Leaderboard
-            <Badge variant="secondary" className="ml-2">
-              {mockLeaderboard.length}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex gap-8">
+        {/* Main Content */}
+        <div className="flex-1 max-w-4xl">
+          {/* Hero Card */}
+          <Card className="rounded-2xl mb-8">
+            <CardContent className="p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={community.avatar} />
+                    <AvatarFallback className="text-2xl">{community.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h2 className="text-2xl font-bold">{community.name}</h2>
+                    <p className="text-muted-foreground">{community.description}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleShare}>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                  <Button 
+                    variant={community.isJoined ? "outline" : "default"}
+                    onClick={handleJoinLeave}
+                  >
+                    {community.isJoined ? "Leave" : "Join"}
+                  </Button>
+                </div>
+              </div>
 
-        <TabsContent value="posts" className="space-y-4">
-          {mockPosts.map((post) => (
-            <PostItem key={post.id} post={post} onReact={handleReact} onShare={handleShare} />
-          ))}
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{community.membersCount.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">Members</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">24</p>
+                  <p className="text-sm text-muted-foreground">Posts this week</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">7</p>
+                  <p className="text-sm text-muted-foreground">Your streak</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {mockPosts.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">No posts yet</h3>
-              <p className="text-muted-foreground">Be the first to share something with this community!</p>
-            </div>
-          )}
-        </TabsContent>
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="posts">Posts</TabsTrigger>
+              <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+              <TabsTrigger value="about">About</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="leaderboard">
-          <Leaderboard entries={mockLeaderboard} title="Top Savers This Month" type="progress" />
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="posts" className="space-y-6">
+              <div className="space-y-4">
+                {mockCommunityPosts.map((post) => (
+                  <Card key={post.id} className="rounded-2xl">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={post.authorAvatar} />
+                          <AvatarFallback>{post.authorAlias[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{post.authorAlias}</span>
+                            <Badge variant="outline" className="text-xs">L3</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>@{post.authorHandle}</span>
+                            <span>•</span>
+                            <span>2h</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm leading-relaxed mb-4">{post.content}</p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {post.tags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-6 pt-4 border-t">
+                        <Button variant="ghost" size="sm">
+                          <ThumbsUp className="h-4 w-4 mr-2" />
+                          {post.reactions}
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          3
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Bookmark className="h-4 w-4 mr-2" />
+                          Save
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="leaderboard" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold">Leaderboard</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant={leaderboardType === "progress" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLeaderboardType("progress")}
+                  >
+                    % Progress
+                  </Button>
+                  <Button
+                    variant={leaderboardType === "streaks" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLeaderboardType("streaks")}
+                  >
+                    Streaks
+                  </Button>
+                </div>
+              </div>
+
+              <Card className="rounded-2xl">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="border-b">
+                        <tr>
+                          <th className="text-left p-4 font-medium">Rank</th>
+                          <th className="text-left p-4 font-medium">Member</th>
+                          <th className="text-right p-4 font-medium">
+                            {leaderboardType === "progress" ? "Progress" : "Streak"}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mockLeaderboard.map((entry, index) => (
+                          <tr key={entry.handle} className="border-b last:border-b-0">
+                            <td className="p-4">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                                {index + 1}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback className="text-xs">{entry.alias[0]}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-medium text-sm">{entry.alias}</p>
+                                  <p className="text-xs text-muted-foreground">@{entry.handle}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4 text-right">
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {leaderboardType === "progress" ? `${entry.progress}%` : `${entry.streak || 0} days`}
+                                </p>
+                                <p className="text-xs text-muted-foreground">normalized by %</p>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="about" className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card className="rounded-2xl">
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-4">What we're about</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Education Savers is a supportive community for anyone saving for education goals. 
+                      Whether you're saving for your own education, your children's future, or helping 
+                      family members, we're here to share tips, celebrate milestones, and keep each other motivated.
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Posting guidelines</h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Share progress updates and milestones</li>
+                        <li>• Ask questions and seek advice</li>
+                        <li>• Be supportive and encouraging</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-2xl">
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold mb-4">Popular tags</h3>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge variant="secondary">#education</Badge>
+                      <Badge variant="secondary">#progress</Badge>
+                      <Badge variant="secondary">#tips</Badge>
+                      <Badge variant="secondary">#milestone</Badge>
+                      <Badge variant="secondary">#roundups</Badge>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Moderators</h4>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">SC</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">@savingsstar</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">MR</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">@budgetboss</span>
+                      </div>
+                    </div>
+
+                    <Button variant="outline" size="sm" className="mt-4">
+                      Report issue
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right Rail (Desktop) */}
+        {!isMobile && (
+          <div className="w-80 space-y-6">
+            {/* Top this week */}
+            <Card className="rounded-2xl">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4">Top this week</h3>
+                <div className="space-y-3">
+                  {mockLeaderboard.slice(0, 5).map((entry) => (
+                    <div key={entry.rank} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                          {entry.rank}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{entry.alias}</p>
+                          <p className="text-xs text-muted-foreground">@{entry.handle}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-sm">{entry.progress}%</p>
+                        <p className="text-xs text-muted-foreground">normalized by %</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Privacy Note */}
+      <div className="mt-8 text-center">
+        <p className="text-xs text-muted-foreground">
+          Public shows % only. Balances stay private.
+        </p>
+      </div>
     </div>
   )
 }

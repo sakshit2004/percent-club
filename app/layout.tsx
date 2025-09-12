@@ -10,6 +10,7 @@ import { QueryProvider } from "@/providers/query-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { MainNav } from "@/components/navigation/main-nav"
 import { SiteFooter } from "@/components/navigation/site-footer"
+import { PerformanceMonitor } from "@/components/common/performance-monitor"
 
 export const metadata: Metadata = {
   title: "percentclub",
@@ -28,6 +29,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <QueryProvider>
+              <PerformanceMonitor />
               <MainNav />
               {children}
               <SiteFooter />

@@ -44,6 +44,7 @@ export async function middleware(req: NextRequest) {
     "/communities",
     "/settings",
     "/profile",
+    "/saved",
   ].some((p) => url.pathname === p || url.pathname.startsWith(p + "/"))
 
   if (isProtected && !user) {
@@ -62,5 +63,6 @@ export const config = {
     "/communities/:path*",
     "/settings/:path*",
     "/profile/:path*",
+    "/saved/:path*",
   ],
 }
