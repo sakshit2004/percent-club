@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   EyeOff,
   ArrowRight,
+  Home,
 } from "lucide-react"
 
 const fadeIn = {
@@ -26,6 +27,30 @@ const fadeIn = {
 export default function HowItWorksPage() {
   return (
     <div className="min-h-screen">
+      {/* Header */}
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/percentclub-logo.svg" alt="percent club logo" width={40} height={40} />
+            <span className="text-xl font-bold">percent club</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                <span className="hidden sm:inline">Home</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/auth/login">Sign In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/auth/sign-up">Get Started</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
       {/* Hero */}
       <section id="top" className="border-b bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto px-4 py-16 text-center">

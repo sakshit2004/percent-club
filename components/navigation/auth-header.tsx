@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { Home } from "lucide-react"
 
 export function AuthHeader() {
   return (
@@ -13,6 +14,12 @@ export function AuthHeader() {
           <span className="text-xl font-bold">percent club</span>
         </div>
         <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/" className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Link>
+          </Button>
           <Button variant="ghost" asChild>
             <Link href="/auth/login">Sign In</Link>
           </Button>
