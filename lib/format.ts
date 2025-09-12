@@ -13,6 +13,16 @@ export function formatPercent(value: number, total: number): string {
   return `${percent}%`
 }
 
+export function centsToMoney(cents: number): string {
+  const amount = (cents || 0) / 100
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
 export function formatDate(dateString: string): string {
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
