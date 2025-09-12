@@ -9,8 +9,8 @@ export function SiteFooter() {
         {/* Brand */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <Image src="/percentclub-logo.svg" alt="percentclub logo" width={36} height={36} />
-            <span className="text-lg font-semibold">percentclub</span>
+            <Image src="/percentclub-logo.svg" alt="percent club logo" width={36} height={36} />
+            <span className="text-lg font-semibold">percent club</span>
           </div>
           <p className="text-sm text-white/70 max-w-xs">
             Save smarter with Pods, Challenges, and your AI savings assistant.
@@ -59,7 +59,7 @@ export function SiteFooter() {
 
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 py-4 text-xs text-white/60 flex items-center justify-between">
-          <span>© {new Date().getFullYear()} percentclub</span>
+          <span>© {new Date().getFullYear()} percent club</span>
           <div className="flex items-center gap-4">
             <Link href="#" className="hover:text-white">Privacy</Link>
             <Link href="#" className="hover:text-white">Terms</Link>

@@ -42,17 +42,22 @@ export function MainNav() {
     "/pricing",
     "/learn/challenges",
   ]
-  if (hideOn.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+  if (
+    pathname.startsWith("/auth") ||
+    hideOn.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  ) {
     return null
   }
+
+  // At this point, we are not on a public or auth page; middleware guards ensure access
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link href="/pods" className="flex items-center gap-2">
-          <Image src="/percentclub-logo.svg" alt="percentclub logo" width={40} height={40} priority />
-          <span className="text-xl font-bold">percentclub</span>
+          <Image src="/percentclub-logo.svg" alt="percent club logo" width={40} height={40} priority />
+          <span className="text-xl font-bold">percent club</span>
         </Link>
 
         {/* Navigation */}

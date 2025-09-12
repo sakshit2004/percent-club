@@ -58,14 +58,12 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Welcome to percentclub!",
-        description: "Your account has been set up successfully. Let's start saving!",
-      })
-      router.push("/pods")
-    }, 2000)
+    try {
+      // Save onboarding selections for post-auth processing
+      localStorage.setItem("blossomOnboardingData", JSON.stringify(data))
+    } catch {}
+    // Redirect to sign-up and, after confirmation, into the app
+    router.push("/auth/sign-up?redirect=/pods")
   }
 
   const handleSkipPod = () => {
@@ -82,13 +80,8 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M30 16a14 14 0 1 1-4.5-10.3l-3 3A10 10 0 1 0 20 16h10z" fill="#2f6df6"/>
-              <circle cx="12" cy="11" r="2" fill="#39c16c"/>
-              <circle cx="18" cy="19" r="2" fill="#39c16c"/>
-              <rect x="14" y="10" width="3" height="10" transform="rotate(45 15.5 15)" rx="1" fill="#39c16c"/>
-            </svg>
-            <span className="text-2xl font-bold">percentclub</span>
+            <img src="/percentclub-logo.svg" alt="percent club logo" width={40} height={40} />
+            <span className="text-2xl font-bold">percent club</span>
           </div>
           <h1 className="text-3xl font-bold mb-2">Welcome to your savings journey!</h1>
           <p className="text-muted-foreground">Let's get you set up in just a few steps</p>

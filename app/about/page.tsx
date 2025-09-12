@@ -1,36 +1,177 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { ShieldCheck, Users, Sparkles, Target, Bot, Zap, ArrowRight } from "lucide-react"
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-6">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to landing
-          </Link>
+    <div className="min-h-screen">
+      {/* Hero */}
+      <section id="top" className="border-b bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">We’re building savings that stick</h1>
+          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+            percent club helps people save—without shame, without custody, with real‑world wins.
+          </p>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Badge variant="secondary">Non‑custodial</Badge>
+            <Badge variant="secondary">Consent‑first</Badge>
+            <Badge variant="secondary">Privacy by design</Badge>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild size="lg">
+              <Link href="/onboarding">Open the app</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/how-it-works">How it works</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Principles */}
+      <section id="mission" className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Mission & Principles</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-5 w-5" /> Non‑custodial by design</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">Your money stays in your bank. We orchestrate with permission only.</CardContent>
+          </Card>
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><Sparkles className="h-5 w-5" /> Consent‑first automation</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">You approve actions like safe‑to‑save, cancellations, and transfers.</CardContent>
+          </Card>
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><Users className="h-5 w-5" /> Community that motivates</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">Percent‑only sharing, badges, and friendly competition—never shaming.</CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Our Story */}
+      <section id="story" className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6">Our story</h2>
+        <p className="text-muted-foreground max-w-3xl mb-6">
+          We started percent club after realizing most savings tools feel heavy or custodial. Our insight: if saving feels
+          small, social, and verified, people keep going. We focus on Pods (clear goals), Challenges (behavioral nudges),
+          and an Agent (smart suggestions) to create real‑world wins.
+        </p>
+        <div className="grid md:grid-cols-4 gap-4 text-sm">
+          <TimelineItem title="Idea" desc="A percent‑only, non‑custodial savings layer" />
+          <TimelineItem title="Prototype" desc="Pods + Round‑Ups + email reviews" />
+          <TimelineItem title="First users" desc="Early wins from sub cleanups and safe‑save" />
+          <TimelineItem title="Today" desc="Open beta with community + agent" />
+        </div>
+      </section>
+
+      {/* Product in short */}
+      <section id="product" className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6">The product, in short</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          <MiniCard icon={<Target className="h-5 w-5" />} title="Pods" desc="Goal buckets with % progress" />
+          <MiniCard icon={<Zap className="h-5 w-5" />} title="Challenges" desc="Behaviors like Round‑Ups & Auto‑Save" />
+          <MiniCard icon={<Bot className="h-5 w-5" />} title="AI Agent" desc="Subs, safe‑save, and deals" />
+        </div>
+      </section>
+
+      {/* Team & Advisors */}
+      <section id="team" className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6">Team & Advisors</h2>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[
+            { n: "AA", t: "Founder" },
+            { n: "BB", t: "Design" },
+            { n: "CC", t: "Engineering" },
+            { n: "DD", t: "Advisor" },
+          ].map((m) => (
+            <Card key={m.n} className="flex items-center gap-3 p-4">
+              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">{m.n}</div>
+              <div>
+                <div className="font-medium">{m.n}</div>
+                <div className="text-xs text-muted-foreground">{m.t}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
+        <div className="mt-6 text-sm text-muted-foreground">
+          Contact: <Link href="mailto:hello@percent.club" className="underline">hello@percent.club</Link>
+        </div>
+      </section>
+
+      {/* Community & Press */}
+      <section id="community" className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-6">Community & Press</h2>
+        <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Quotes</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">“Round‑ups + safe‑save worked when nothing else did.”</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Highlights</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">Early users saw measurable savings within weeks.</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Mentions</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">Fintech newsletters, community forums.</CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Careers */}
+      <section id="careers" className="container mx-auto px-4 py-16">
+        <h2 className="text-2xl md:text-3xl font-bold mb-3">Careers</h2>
+        <p className="text-muted-foreground mb-4">We’re tiny and fast. If you ship, say hi.</p>
+        <Button asChild>
+          <Link href="mailto:hello@percent.club">Email us</Link>
         </Button>
-      </div>
-      <h1 className="text-3xl font-bold mb-4">About percentclub</h1>
-      <p className="text-muted-foreground mb-6 max-w-2xl">
-        We help you save smarter with goal-based Pods, automated Challenges, and an AI savings assistant — all designed
-        to make building good financial habits simple and motivating.
-      </p>
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="p-6 rounded-lg border bg-card">
-          <h3 className="font-semibold mb-2">Privacy first</h3>
-          <p className="text-sm text-muted-foreground">Share only what you choose. Percent-based sharing, never balances.</p>
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="container mx-auto px-4 pb-16">
+        <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-8 text-center">
+          <h2 className="text-2xl font-bold mb-3">Ready to try percent club?</h2>
+          <Button size="lg" variant="secondary" asChild>
+            <Link href="/onboarding">Get started</Link>
+          </Button>
         </div>
-        <div className="p-6 rounded-lg border bg-card">
-          <h3 className="font-semibold mb-2">Motivation built-in</h3>
-          <p className="text-sm text-muted-foreground">Communities and streaks help you stay on track.</p>
-        </div>
-        <div className="p-6 rounded-lg border bg-card">
-          <h3 className="font-semibold mb-2">Open roadmap</h3>
-          <p className="text-sm text-muted-foreground">We build in public and ship improvements weekly.</p>
-        </div>
-      </div>
+      </section>
     </div>
+  )
+}
+
+function MiniCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+  return (
+    <Card className="rounded-2xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">{icon} <span>{title}</span></CardTitle>
+        <CardDescription>{desc}</CardDescription>
+      </CardHeader>
+    </Card>
+  )
+}
+
+function TimelineItem({ title, desc }: { title: string; desc: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-muted-foreground">{desc}</CardContent>
+    </Card>
   )
 }

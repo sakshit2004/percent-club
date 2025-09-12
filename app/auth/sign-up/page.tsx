@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { AuthHeader } from "@/components/navigation/auth-header"
 import { useState } from "react"
 
 export default function Page() {
@@ -19,6 +20,7 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +39,9 @@ export default function Page() {
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/pods`,
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}${searchParams?.get("redirect") || "/pods"}`,
           data: {
             display_name: displayName,
           },
@@ -53,9 +57,10 @@ export default function Page() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <AuthHeader />
+      <div className="container mx-auto px-4 py-10 flex items-center justify-center">
+        <div className="w-full max-w-sm">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Sign up</CardTitle>
