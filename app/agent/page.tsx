@@ -32,6 +32,7 @@ import {
   Undo
 } from "lucide-react"
 import type { Subscription, Offer, AgentProposal, Pod } from "@/types"
+import { usePodsLive, useRecurring, useInstitutions, useRoundups } from "@/lib/penny/client"
 
 // Mock data - moved outside component to prevent recreation
 const mockSubscriptions: Subscription[] = [
@@ -155,6 +156,8 @@ export default function AgentPage() {
   const [isMobile, setIsMobile] = useState(false)
   const [showUndo, setShowUndo] = useState(false)
   const [lastAction, setLastAction] = useState<string | null>(null)
+  const [threadId, setThreadId] = useState<string | null>(null)
+  const [pendingProposal, setPendingProposal] = useState<{ id: string; tool: string; args: any; preview: string } | null>(null)
   
   // Dialog states
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
@@ -172,6 +175,10 @@ export default function AgentPage() {
   const [searchQuery, setSearchQuery] = useState("")
   
   const { toast } = useToast()
+  const podsQuery = usePodsLive()
+  const recurringQuery = useRecurring()
+  const institutionsQuery = useInstitutions()
+  const roundupsQuery = useRoundups()
 
   // Initialize with welcome message
   useEffect(() => {
@@ -206,23 +213,75 @@ export default function AgentPage() {
       text: message,
       timestamp: new Date().toISOString(),
     }
-
-    setMessages((prev) => [...prev, userMessage])
+    setMessages((prev: ChatMessage[]) => [...prev, userMessage])
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const agentMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "agent",
-        text: getAgentResponse(message),
-        timestamp: new Date().toISOString(),
-        suggestions: getMessageSuggestions(message),
-      }
-
-      setMessages((prev) => [...prev, agentMessage])
+    const res = await fetch("/api/penny/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ threadId, message }),
+    })
+    if (!res.ok || !res.body) {
       setIsLoading(false)
-    }, 1500)
+      return
+    }
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let assistantText = ""
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      const chunk = decoder.decode(value, { stream: true })
+      const events = chunk.split("\n\n").filter(Boolean)
+      for (const evt of events) {
+        const [evtLine, dataLine] = evt.split("\n")
+        const ev = evtLine?.replace("event: ", "").trim()
+        const dataRaw = dataLine?.replace("data: ", "")
+        let data: any
+        try { data = dataRaw ? JSON.parse(dataRaw) : null } catch { data = null }
+        if (ev === "meta" && data?.threadId) setThreadId(data.threadId)
+        if (ev === "message" && data?.type === "delta" && data?.content) assistantText += data.content
+        if (ev === "actionPreview" && data) setPendingProposal({ id: data.proposalId, tool: data.tool, args: data.args, preview: data.preview })
+      }
+    }
+    if (assistantText.trim()) {
+      setMessages((prev: ChatMessage[]) => [...prev, { id: Date.now().toString(), role: "agent", text: assistantText, timestamp: new Date().toISOString() }])
+    }
+    setIsLoading(false)
+  }
+
+  const approvePending = async () => {
+    if (!pendingProposal) return
+    setIsLoading(true)
+    const res = await fetch("/api/penny/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ threadId, approved: true, proposal: { id: pendingProposal.id, tool: pendingProposal.tool, args: pendingProposal.args } }),
+    })
+    if (res.ok && res.body) {
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let assistantText = ""
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        const chunk = decoder.decode(value, { stream: true })
+        const events = chunk.split("\n\n").filter(Boolean)
+        for (const evt of events) {
+          const [evtLine, dataLine] = evt.split("\n")
+          const ev = evtLine?.replace("event: ", "").trim()
+          const dataRaw = dataLine?.replace("data: ", "")
+          let data: any
+          try { data = dataRaw ? JSON.parse(dataRaw) : null } catch { data = null }
+          if (ev === "message" && data?.type === "delta" && data?.content) assistantText += data.content
+        }
+      }
+      if (assistantText.trim()) {
+        setMessages((prev: ChatMessage[]) => [...prev, { id: Date.now().toString(), role: "agent", text: assistantText, timestamp: new Date().toISOString() }])
+      }
+    }
+    setPendingProposal(null)
+    setIsLoading(false)
   }
 
   const handleSuggestionClick = (action: string) => {
@@ -250,7 +309,7 @@ export default function AgentPage() {
   const handleRenameAgent = () => {
     if (newAgentName.trim()) {
       setAgentName(newAgentName.trim())
-    toast({
+      toast({
         title: "Agent renamed",
         description: `to ${newAgentName.trim()}`,
       })
@@ -298,7 +357,7 @@ export default function AgentPage() {
       text: getActionConfirmationMessage(action, data),
       timestamp: new Date().toISOString(),
     }
-    setMessages((prev) => [...prev, agentMessage])
+    setMessages((prev: ChatMessage[]) => [...prev, agentMessage])
   }
 
   const handleUndo = () => {
@@ -409,6 +468,18 @@ export default function AgentPage() {
         <div className="container mx-auto px-4 pb-2">
           <p className="text-xs text-muted-foreground">We only propose; you approve. No funds move without consent.</p>
         </div>
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="container mx-auto px-4 pb-3">
+            <div className="rounded-md border p-3 flex items-center justify-between bg-muted/30">
+              <span className="text-xs text-muted-foreground">Developer MCP Triggers</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleSendMessage("Create a Plaid Sandbox public token for institution ins_3, exchange it, then sync transactions and recurring.")}>Create public token</Button>
+                <Button size="sm" variant="outline" onClick={() => handleSendMessage("Fire transactions webhook for my first item.")}>Fire webhook</Button>
+                <Button size="sm" variant="outline" onClick={() => handleSendMessage("Set my first item to login required (simulate relink).")}>Login required</Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
@@ -473,6 +544,19 @@ export default function AgentPage() {
               <Undo className="h-4 w-4 mr-1" />
               Undo
             </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Action Preview Bar */}
+      {pendingProposal && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-background border rounded-lg p-3 shadow-lg z-50 max-w-lg w-[90%]">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm">{pendingProposal.preview}</span>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={approvePending}>Approve</Button>
+              <Button size="sm" variant="outline" onClick={() => setPendingProposal(null)}>Cancel</Button>
+            </div>
           </div>
         </div>
       )}
@@ -645,7 +729,7 @@ function ChatInterface({ messages, onSendMessage, onSuggestionClick, isLoading, 
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e: any) => setInputValue((e?.target?.value as string) || "")}
             placeholder="Ask me to cut costs, find deals, or propose a weekly save…"
             disabled={isLoading}
           />
@@ -706,20 +790,26 @@ function AssistantConsole({
         <TabsContent value="subs" className="p-4 space-y-4 mt-0">
                 <div className="flex items-center justify-between">
             <h3 className="font-semibold">Monthly Review</h3>
-            <Badge variant="outline">{subscriptions.length} subscriptions</Badge>
+            <Badge variant="outline">{recurringQuery.data?.items?.length ?? 0} subscriptions</Badge>
           </div>
-          <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-sm font-medium">5 subscriptions • Potential savings: $28/mo</p>
-                </div>
-          <SubscriptionTable
-            subscriptions={subscriptions}
-            onCancel={onCancelSubscription}
-            onReschedule={onRescheduleSubscription}
-            onMarkLowUsage={onMarkLowUsage}
-          />
-          <p className="text-xs text-muted-foreground">
-            We detect recurring merchants by interval patterns. You approve every change.
-          </p>
+          {recurringQuery.isLoading ? (
+            <div className="space-y-2">
+              <div className="h-16 bg-muted/40 rounded" />
+              <div className="h-16 bg-muted/40 rounded" />
+            </div>
+          ) : recurringQuery.isError ? (
+            <div className="text-sm text-red-500">Failed to load recurring. <button className="underline" onClick={() => recurringQuery.refetch()}>Retry</button></div>
+          ) : (recurringQuery.data?.items?.length ? (
+            <SubscriptionTable
+              subscriptions={(recurringQuery.data.items || []).map((r: any) => ({ id: r.id, merchant: r.merchant, monthlyCost: (r.amount_cents ?? 0) / 100, nextChargeDate: r.next_due_date || "", status: "active", flags: r.flags || [] }))}
+              onCancel={onCancelSubscription}
+              onReschedule={onRescheduleSubscription}
+              onMarkLowUsage={onMarkLowUsage}
+            />
+          ) : (
+            <div className="text-sm text-muted-foreground">No subscriptions found.</div>
+          ))}
+          <p className="text-xs text-muted-foreground mt-2">We detect recurring merchants by interval patterns. You approve every change.</p>
               </TabsContent>
 
               <TabsContent value="save" className="p-4 space-y-4 mt-0">
@@ -735,12 +825,12 @@ function AssistantConsole({
               <TabsContent value="deals" className="p-4 space-y-4 mt-0">
                 <div className="flex items-center justify-between">
             <h3 className="font-semibold">Deals</h3>
-            <Badge variant="outline">{offers.length} found</Badge>
+            <Badge variant="outline">{institutionsQuery.data?.length ?? 0} connections</Badge>
                 </div>
           <Input
             placeholder="What are you buying?"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e: any) => onSearchChange((e?.target?.value as string) || "")}
           />
           <div className="space-y-3">
             {offers.map((offer) => (
@@ -804,13 +894,14 @@ interface SubscriptionTableProps {
 }
 
 function SubscriptionTable({ subscriptions, onCancel, onReschedule, onMarkLowUsage }: SubscriptionTableProps) {
-  const getFlagBadge = (flag: string) => {
+  const getFlagBadge = (flag: string): JSX.Element => {
     const variants = {
       duplicate: "destructive",
       overpriced: "destructive", 
       "low-usage": "secondary"
     } as const
-    return <Badge variant={variants[flag as keyof typeof variants] || "outline"} className="text-xs">{flag}</Badge>
+    const variant = (variants as unknown as Record<string, "destructive" | "secondary" | "default" | "outline" | "secondary" | "success" | "warning">)[flag] || "outline"
+    return <Badge variant={variant} className="text-xs">{flag}</Badge>
   }
 
   return (
@@ -829,7 +920,7 @@ function SubscriptionTable({ subscriptions, onCancel, onReschedule, onMarkLowUsa
             </div>
             {subscription.flags.length > 0 && (
               <div className="flex gap-1 mb-3">
-                {subscription.flags.map((flag) => (
+                {subscription.flags.map((flag: string) => (
                   <div key={flag}>{getFlagBadge(flag)}</div>
                 ))}
               </div>
@@ -966,7 +1057,7 @@ function RenameDialog({ open, onOpenChange, agentName, onAgentNameChange, onRena
             <Input
               id="agent-name"
               value={agentName}
-              onChange={(e) => onAgentNameChange(e.target.value)}
+              onChange={(e: any) => onAgentNameChange((e?.target?.value as string) || "")}
               placeholder="e.g., Penny"
             />
           </div>
