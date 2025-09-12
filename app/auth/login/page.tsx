@@ -36,7 +36,7 @@ export default function Page() {
       })
       if (error) throw error
       const redirect = searchParams?.get("redirect")
-      router.push(redirect || "/pods")
+      router.push(redirect || "/connect")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

@@ -57,7 +57,8 @@ export async function updateSession(request: NextRequest) {
     "/profile",
     "/saved",
     "/test-middleware",
-    "/check-auth"
+    "/check-auth",
+    "/connect"
   ]
 
   const isProtectedRoute = protectedRoutes.some(route => 

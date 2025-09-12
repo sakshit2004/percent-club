@@ -9,8 +9,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { PodProgressRing } from "@/components/pods/pod-progress-ring"
 import { usePods } from "@/lib/api"
-import { formatCurrency } from "@/lib/format"
-import { Plus, Target } from "lucide-react"
+import { centsToMoney } from "@/lib/format"
+import { Plus, Target, AlertCircle } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 
 interface SinkPodSelectorDialogProps {
   open: boolean
@@ -27,7 +28,7 @@ export function SinkPodSelectorDialog({
   onConfirm,
   onCreatePod,
 }: SinkPodSelectorDialogProps) {
-  const { data: pods, isLoading } = usePods()
+  const { data: pods, isLoading, isError, isFetching, refetch } = usePods({ enabled: open }) as any
   const [selectedPodId, setSelectedPodId] = useState<string>("")
 
   const handleConfirm = () => {
@@ -54,10 +55,25 @@ export function SinkPodSelectorDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {isLoading ? (
+          {isLoading || isFetching ? (
             <div className="text-center py-8">
               <div className="text-muted-foreground">Loading pods...</div>
             </div>
+          ) : isError ? (
+            <Card>
+              <CardContent className="py-6">
+                <div className="flex items-start gap-2 text-destructive">
+                  <AlertCircle className="h-4 w-4 mt-0.5" />
+                  <div>
+                    <div className="font-medium">Failed to load pods</div>
+                    <div className="text-sm text-muted-foreground">Please try again.</div>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <Button variant="outline" onClick={() => refetch()} className="bg-transparent">Retry</Button>
+                </div>
+              </CardContent>
+            </Card>
           ) : !pods || pods.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
@@ -77,31 +93,25 @@ export function SinkPodSelectorDialog({
           ) : (
             <RadioGroup value={selectedPodId} onValueChange={setSelectedPodId}>
               <div className="grid gap-3 max-h-96 overflow-y-auto">
-                {pods.map((pod) => (
+                {pods.map((pod: any) => (
                   <div key={pod.id} className="flex items-center space-x-3">
                     <RadioGroupItem value={pod.id} id={pod.id} />
                     <Label htmlFor={pod.id} className="flex-1 cursor-pointer">
                       <Card className="hover:bg-muted/50 transition-colors">
                         <CardContent className="flex items-center gap-4 p-4">
-                          <PodProgressRing
-                            current={pod.currentAmount}
-                            target={pod.targetAmount}
-                            size={48}
-                            strokeWidth={4}
-                          />
+                          <PodProgressRing current={pod.percentToGoal || 0} target={100} size={48} strokeWidth={4} />
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <h4 className="font-medium">{pod.name}</h4>
-                              {pod.isFeatured && (
-                                <Badge variant="outline" className="text-xs">
-                                  Featured
-                                </Badge>
+                              {!!pod.percentToGoal && (
+                                <Badge variant="outline" className="text-xs">{Math.round(pod.percentToGoal)}%</Badge>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              {formatCurrency(pod.currentAmount)} of {formatCurrency(pod.targetAmount)}
+                            <p className="text-xs text-muted-foreground">
+                              Last: {pod.lastActivityLabel || "No recent activity"}
                             </p>
                           </div>
+                          <div className="text-xs text-muted-foreground">R {centsToMoney((pod.inflows?.roundups || 0) * 100)}</div>
                         </CardContent>
                       </Card>
                     </Label>

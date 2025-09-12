@@ -15,6 +15,7 @@ import { ChallengeCardSkeleton } from "@/components/common/loading-skeleton"
 import { useChallenges, useToggleChallenge, useConfigureChallenge, usePods } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { Zap, Info, Coins, Calendar, CreditCard, Trophy, Play, Pause, Settings, AlertCircle } from "lucide-react"
+import { PlaidConnectButton } from "@/components/plaid/connect-button"
 import type { Challenge } from "@/types"
 
 export default function ChallengesPage() {
@@ -243,9 +244,12 @@ export default function ChallengesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Challenges</h1>
-        <p className="text-muted-foreground">Prebuilt behaviors that pay into a sink pod.</p>
+        <div className="flex items-center gap-3">
+          <p className="text-muted-foreground hidden md:block">Prebuilt behaviors that pay into a sink pod.</p>
+          <PlaidConnectButton />
+        </div>
       </div>
 
       {/* Filter Chips */}

@@ -1,235 +1,248 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { Pod, Challenge } from "@/types"
+export type InstitutionsRes = {
+  items: {
+    item_id: string
+    institution_name: string
+    status: "ok" | "needs_relink" | "error"
+    last_synced_at: string | null
+  }[]
+}
 
-// Mock data - will be replaced with real API calls later
-let mockPods: Pod[] = [
-  {
-    id: "1",
-    name: "Education",
-    targetAmount: 15000,
-    currentAmount: 4200,
-    targetDate: "2025-06-01",
-    isFeatured: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-15T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Travel",
-    targetAmount: 5000,
-    currentAmount: 1800,
-    targetDate: "2024-12-15",
-    isFeatured: false,
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-02-15T00:00:00Z",
-  },
-  {
-    id: "3",
-    name: "Emergency Fund",
-    targetAmount: 10000,
-    currentAmount: 3200,
-    targetDate: "2024-12-31",
-    isFeatured: false,
-    createdAt: "2024-01-15T00:00:00Z",
-    updatedAt: "2024-01-20T00:00:00Z",
-  },
-]
+export type RoundupsRes = {
+  pending_cents: number
+  last30: { round_ups: number; autosave: number; cashback: number }
+}
 
-const mockChallenges: Challenge[] = [
-  {
-    id: "roundups",
-    name: "Round-Ups",
-    description: "Round up purchases to the nearest dollar and save the change automatically",
-    subtitle: "Save spare change automatically",
-    icon: "coins",
-    expectedImpact: "$20-50/month",
-    isActive: true,
-    sinkPodId: "1",
-    sinkPodName: "Emergency Fund",
-    config: { minAmount: "0.50", maxAmount: "5.00" },
-  },
-  {
-    id: "weekly-auto",
-    name: "Weekly Auto-Save",
-    description: "Automatically save a fixed amount every week on the same day",
-    subtitle: "Consistent weekly savings",
-    icon: "calendar",
-    expectedImpact: "$40-200/month",
-    isActive: false,
-    config: { weeklyAmount: "50", dayOfWeek: "friday" },
-  },
-  {
-    id: "52-week",
-    name: "52-Week Challenge",
-    description: "Save an increasing amount each week, starting from $1 and ending at $52",
-    subtitle: "Progressive savings challenge",
-    icon: "trophy",
-    expectedImpact: "$1,378/year",
-    isActive: false,
-    config: { startAmount: "1.00", currentWeek: 1 },
-  },
-  {
-    id: "cashback",
-    name: "Cashback Hunt",
-    description: "Automatically save cashback rewards and found deals into your pods",
-    subtitle: "Optimize your spending rewards",
-    icon: "credit-card",
-    expectedImpact: "$15-75/month",
-    isActive: false,
-    config: { threshold: "1.00", autoApply: false },
-  },
-]
+export type RecurringRow = {
+  id?: string
+  merchant: string
+  monthly_cost_cents: number
+  next_date: string | null
+  flags: string[]
+  status: "active" | "canceled" | "rescheduled"
+  reasons: string[]
+}
 
-// API functions (stubbed for now)
-export const usePods = () => {
+export type RecurringRes = { rows: RecurringRow[]; potential_savings_cents: number }
+
+export type PodsRes = {
+  pods: {
+    id: string
+    name: string
+    percentToGoal: number | null
+    lastActivityLabel: string | null
+    inflows: { roundups: number; autosave: number; cashback: number }
+  }[]
+}
+
+async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+    cache: "no-store",
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new Error(text || `Request failed: ${res.status}`)
+  }
+  return (await res.json()) as T
+}
+
+export async function getInstitutions(): Promise<InstitutionsRes> {
+  return apiFetch<InstitutionsRes>("/api/plaid/institutions")
+}
+
+export async function postLinkToken(body?: any): Promise<{ link_token: string }> {
+  return apiFetch<{ link_token: string }>("/api/plaid/link-token", {
+    method: "POST",
+    body: JSON.stringify(body || {}),
+  })
+}
+
+export async function postExchange(body: { public_token: string; institution_name?: string }): Promise<any> {
+  return apiFetch<any>("/api/plaid/exchange", {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+}
+
+export async function postSyncTx(item_id?: string): Promise<{ synced: number }> {
+  const url = "/api/sync/transactions" + (item_id ? `?item_id=${encodeURIComponent(item_id)}` : "")
+  return apiFetch<{ synced: number }>(url, { method: "POST" })
+}
+
+export async function postSyncRecurring(item_id?: string): Promise<{ refreshed: boolean }> {
+  const url = "/api/sync/recurring" + (item_id ? `?item_id=${encodeURIComponent(item_id)}` : "")
+  return apiFetch<{ refreshed: boolean }>(url, { method: "POST" })
+}
+
+export async function getRoundups(): Promise<RoundupsRes> {
+  return apiFetch<RoundupsRes>("/api/data/roundups")
+}
+
+export async function getRecurring(): Promise<RecurringRes> {
+  return apiFetch<RecurringRes>("/api/data/recurring")
+}
+
+export async function getPods(): Promise<PodsRes> {
+  const res = await apiFetch<any>("/api/pods")
+  return Array.isArray(res) ? { pods: res } : (res as PodsRes)
+}
+
+// React Query hooks for Pods page
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+
+export function usePods(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["pods"],
-    queryFn: async (): Promise<Pod[]> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      return mockPods
-    },
+    queryFn: async () => (await getPods()).pods ?? ([] as any),
+    ...(options || {}),
   })
 }
 
-export const usePod = (id: string) => {
-  return useQuery({
-    queryKey: ["pod", id],
-    queryFn: async (): Promise<Pod | null> => {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      return mockPods.find((pod) => pod.id === id) || null
-    },
-  })
-}
-
-export const useChallenges = () => {
-  return useQuery({
-    queryKey: ["challenges"],
-    queryFn: async (): Promise<Challenge[]> => {
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      return mockChallenges
-    },
-  })
-}
-
-export const useCreatePod = () => {
-  const queryClient = useQueryClient()
-
+export function useCreatePod() {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (pod: Omit<Pod, "id" | "createdAt" | "updatedAt">): Promise<Pod> => {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      const newPod: Pod = {
-        ...pod,
-        id: Math.random().toString(36).substr(2, 9),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    mutationFn: async (body: { name: string; targetAmount?: number; targetDate?: string; isFeatured?: boolean }) => {
+      const res = await fetch("/api/pods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      return res.json()
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pods"] }),
+  })
+}
+
+export function useUpdatePod() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ podId, updates }: { podId: string; updates: { name?: string; targetAmount?: number; targetDate?: string; isFeatured?: boolean } }) => {
+      const res = await fetch(`/api/pods/${encodeURIComponent(podId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      return res.json()
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pods"] }),
+  })
+}
+
+export function useDeletePod() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (podId: string) => {
+      const res = await fetch(`/api/pods/${encodeURIComponent(podId)}`, { method: "DELETE" })
+      if (!res.ok) throw new Error(await res.text())
+      return res.json()
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pods"] }),
+  })
+}
+
+export function useExportPod() {
+  // Stub for now; implement when export route exists
+  return useMutation({
+    mutationFn: async (_podId: string) => ({ ok: true }),
+  })
+}
+
+export async function postPostRoundups(body: {
+  user_challenge_id: string
+  pod_id: string
+  amount_cents: number
+}): Promise<{ ok: true }> {
+  return apiFetch<{ ok: true }>("/api/events/post-roundups", {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+}
+
+export async function postRecordSavings(body: {
+  pod_id: string
+  amount_cents: number
+  source: string
+  note?: string
+}): Promise<{ ok: true }> {
+  return apiFetch<{ ok: true }>("/api/events/record-savings", {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+}
+
+export async function getChallenges(): Promise<any> {
+  return apiFetch<any>("/api/challenges")
+}
+
+export async function getUserChallenges(): Promise<any> {
+  return apiFetch<any>("/api/user-challenges")
+}
+
+export async function patchUserChallenge(
+  id: string,
+  body: { status?: "on" | "paused"; sinkPodId?: string },
+): Promise<any> {
+  return apiFetch<any>(`/api/user-challenges/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  })
+}
+
+export async function postUserChallenge(body: { challengeKey: string; sinkPodId: string }): Promise<any> {
+  return apiFetch<any>("/api/user-challenges", {
+    method: "POST",
+    body: JSON.stringify(body),
+  })
+}
+
+// React Query hooks for Challenges (reuse same imports)
+
+export function useChallenges() {
+  return useQuery({ queryKey: ["challenges"], queryFn: async () => (await getChallenges()).challenges as any[] })
+}
+
+export function useToggleChallenge() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ challengeId, isActive, sinkPodId }: { challengeId: string; isActive: boolean; sinkPodId?: string }) => {
+      if (sinkPodId) {
+        return postUserChallenge({ challengeKey: challengeId, sinkPodId })
       }
-      // Add the new pod to the mock data
-      mockPods.push(newPod)
-      return newPod
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pods"] })
-    },
-  })
-}
-
-export const useToggleChallenge = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      challengeId,
-      isActive,
-      sinkPodId,
-    }: {
-      challengeId: string
-      isActive: boolean
-      sinkPodId?: string
-    }): Promise<void> => {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      // Mock toggle logic - would update challenge state
-      console.log(`Toggle challenge ${challengeId} to ${isActive ? "active" : "inactive"}`, { sinkPodId })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["challenges"] })
-      queryClient.invalidateQueries({ queryKey: ["pods"] })
-    },
-  })
-}
-
-export const useConfigureChallenge = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      challengeId,
-      config,
-    }: {
-      challengeId: string
-      config: Record<string, any>
-    }): Promise<void> => {
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      // Mock configuration logic
-      console.log(`Configure challenge ${challengeId}`, config)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["challenges"] })
-    },
-  })
-}
-
-export const useUpdatePod = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      podId,
-      updates,
-    }: {
-      podId: string
-      updates: Partial<Omit<Pod, "id" | "createdAt" | "updatedAt">>
-    }): Promise<Pod> => {
-      await new Promise((resolve) => setTimeout(resolve, 400))
-      const podIndex = mockPods.findIndex((pod) => pod.id === podId)
-      if (podIndex === -1) throw new Error("Pod not found")
-      
-      const updatedPod = {
-        ...mockPods[podIndex],
-        ...updates,
-        updatedAt: new Date().toISOString(),
+      // Toggle on/off requires existing row id; refetch bindings to find it
+      const res = await apiFetch<any>("/api/user-challenges")
+      const row = (res.rows || []).find((r: any) => r.challenge_key === challengeId)
+      if (!row) {
+        if (!isActive) return { ok: true }
+        throw new Error("Challenge not configured yet")
       }
-      mockPods[podIndex] = updatedPod
-      return updatedPod
+      return apiFetch<any>(`/api/user-challenges/${encodeURIComponent(row.id)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: isActive ? "on" : "paused" }),
+      })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pods"] })
+      qc.invalidateQueries({ queryKey: ["challenges"] })
     },
   })
 }
 
-export const useDeletePod = () => {
-  const queryClient = useQueryClient()
-
+export function useConfigureChallenge() {
+  const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (podId: string): Promise<void> => {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      const podIndex = mockPods.findIndex((pod) => pod.id === podId)
-      if (podIndex === -1) throw new Error("Pod not found")
-      mockPods.splice(podIndex, 1)
+    mutationFn: async ({ challengeId, config }: { challengeId: string; config: Record<string, any> }) => {
+      // For now, just ensure a binding exists; config persistence can be added later
+      // by storing a JSONB column. We'll no-op here and refetch.
+      const res = await apiFetch<any>("/api/user-challenges")
+      const row = (res.rows || []).find((r: any) => r.challenge_key === challengeId)
+      if (!row) return { ok: true }
+      return { ok: true }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pods"] })
-    },
-  })
-}
-
-export const useExportPod = () => {
-  return useMutation({
-    mutationFn: async (podId: string): Promise<void> => {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      // Mock export logic - would generate CSV
-      console.log(`Exporting pod ${podId} data`)
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["challenges"] }),
   })
 }

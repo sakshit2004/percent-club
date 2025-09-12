@@ -62,6 +62,8 @@ export function MainNav() {
   const [showDesktopMenu, setShowDesktopMenu] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { toast } = useToast()
+  const [isBankLinked, setIsBankLinked] = useState<boolean>(false)
+  const [showBankMenu, setShowBankMenu] = useState<boolean>(false)
 
   // Check for mobile - optimized with debouncing
   useEffect(() => {
@@ -83,6 +85,14 @@ export function MainNav() {
       window.removeEventListener('resize', checkMobile)
       clearTimeout(timeoutId)
     }
+  }, [])
+  // Lightweight "bank linked" check via presence of any plaid_items (stored client-side hint)
+  useEffect(() => {
+    // Set by PlaidConnectButton after successful link
+    const flag = localStorage.getItem("bank_linked") === "1"
+    setIsBankLinked(flag)
+    const i = setInterval(() => setIsBankLinked(localStorage.getItem("bank_linked") === "1"), 5000)
+    return () => clearInterval(i)
   }, [])
 
   // Close dropdown when clicking outside
@@ -156,7 +166,7 @@ export function MainNav() {
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-3">
             {navigation.map((item) => {
               const Icon = item.icon as any
               const isActive = pathname.startsWith(item.href)
@@ -176,6 +186,52 @@ export function MainNav() {
                 </Button>
               )
             })}
+            {isBankLinked ? (
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  className="ml-2 px-0"
+                  type="button"
+                  onClick={() => setShowBankMenu((v) => !v)}
+                >
+                  <Badge variant="success" className="px-3 py-1 text-sm">Bank linked</Badge>
+                  <ChevronDown className="h-4 w-4 ml-1 text-muted-foreground" />
+                </Button>
+                {showBankMenu && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border rounded-md shadow-lg z-50">
+                    <button
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-sm"
+                      onClick={() => { setShowBankMenu(false); router.push('/connect'); }}
+                    >
+                      <Users className="h-4 w-4" />
+                      Link another bank
+                    </button>
+                    <button
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-sm text-red-600"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/plaid/unlink', { method: 'POST' })
+                          if (!res.ok) throw new Error(await res.text())
+                          localStorage.removeItem('bank_linked')
+                          setIsBankLinked(false)
+                          setShowBankMenu(false)
+                          toast({ title: 'Bank unlinked' })
+                        } catch (e) {
+                          toast({ title: 'Failed to unlink', variant: 'destructive' })
+                        }
+                      }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Unlink bank
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/connect" className="ml-2">
+                <Badge className="px-3 py-1 text-sm">Connect bank</Badge>
+              </Link>
+            )}
           </nav>
 
           {/* User Menu - Desktop */}
