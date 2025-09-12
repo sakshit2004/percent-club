@@ -1,0 +1,27 @@
+{
+  "items": [
+    { "item_id": "mock-item-1", "institution_name": "Scotiabank (Sandbox)" },
+    { "item_id": "mock-item-2", "institution_name": "RBC (Sandbox)" }
+  ],
+  "accounts": [
+    { "item_id": "mock-item-1", "account_id": "acc-1", "name": "Chequing", "mask": "1234", "type": "depository", "subtype": "checking" },
+    { "item_id": "mock-item-2", "account_id": "acc-2", "name": "Visa", "mask": "5678", "type": "credit", "subtype": "credit card" }
+  ],
+  "transactions": [
+    { "item_id": "mock-item-1", "account_id": "acc-1", "plaid_tx_id": "txn-1", "date": "2025-08-20", "name": "Coffee Shop", "merchant_name": "Local Cafe", "amount_cents": 425, "pending": false, "category": ["food", "coffee"] },
+    { "item_id": "mock-item-1", "account_id": "acc-1", "plaid_tx_id": "txn-2", "date": "2025-08-21", "name": "Grocery Store", "merchant_name": "Loblaws", "amount_cents": 5899, "pending": false, "category": ["groceries"] },
+    { "item_id": "mock-item-2", "account_id": "acc-2", "plaid_tx_id": "txn-3", "date": "2025-08-22", "name": "Subscription", "merchant_name": "Netflix", "amount_cents": 1599, "pending": false, "category": ["video_streaming"] },
+    { "item_id": "mock-item-2", "account_id": "acc-2", "plaid_tx_id": "txn-4", "date": "2025-08-23", "name": "Spotify", "merchant_name": "Spotify", "amount_cents": 1099, "pending": false, "category": ["music_streaming"] }
+  ],
+  "recurring_streams": [
+    { "item_id": "mock-item-2", "stream_id": "rs-1", "merchant": "Netflix", "cadence": "monthly", "next_date": "2025-09-15", "average_amount_cents": 1599, "last_amount_cents": 1599, "category": ["video_streaming"], "status": "active" },
+    { "item_id": "mock-item-2", "stream_id": "rs-2", "merchant": "Spotify", "cadence": "monthly", "next_date": "2025-09-10", "average_amount_cents": 1099, "last_amount_cents": 1099, "category": ["music_streaming"], "status": "active" },
+    { "item_id": "mock-item-1", "stream_id": "rs-3", "merchant": "Telco Plan", "cadence": "monthly", "next_date": "2025-09-20", "average_amount_cents": 8500, "last_amount_cents": 8500, "category": ["mobile_plan_basic"], "status": "active" },
+    { "item_id": "mock-item-1", "stream_id": "rs-4", "merchant": "Gym Membership", "cadence": "monthly", "next_date": "2025-09-12", "average_amount_cents": 2999, "last_amount_cents": 2999, "category": ["gym_basic"], "status": "active" }
+  ],
+  "roundups": {
+    "pending_cents": 342,
+    "last30": { "round_ups": 1200, "autosave": 2500, "cashback": 800 }
+  }
+}
+
