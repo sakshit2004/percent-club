@@ -7,13 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Target, Bot, ArrowRight, ArrowLeft, Check } from "lucide-react"
+import { Sparkles, Target, ArrowRight, ArrowLeft, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
 interface OnboardingData {
   alias: string
-  agentName: string
   firstPod: {
     name: string
     targetAmount: string
@@ -25,7 +24,6 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [data, setData] = useState<OnboardingData>({
     alias: "",
-    agentName: "",
     firstPod: {
       name: "",
       targetAmount: "",
@@ -36,7 +34,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const { toast } = useToast()
 
-  const totalSteps = 4
+  const totalSteps = 3
   const progress = (currentStep / totalSteps) * 100
 
   const handleNext = () => {
@@ -67,11 +65,10 @@ export default function OnboardingPage() {
   }
 
   const handleSkipPod = () => {
-    setCurrentStep(() => 4) // Skip to final step
+    setCurrentStep(() => totalSteps) // Skip to final step
   }
 
   const canProceedStep1 = data.alias.trim().length >= 2
-  const canProceedStep2 = data.agentName.trim().length >= 2
   const canProceedStep3 = data.firstPod.name.trim() && data.firstPod.targetAmount && data.firstPod.targetDate
 
   return (
@@ -132,43 +129,8 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* Step 2: Name Your Agent */}
+          {/* Step 2: Create First Pod */}
           {currentStep === 2 && (
-            <>
-              <CardHeader className="text-center">
-                <div className="h-16 w-16 rounded-full bg-info/10 flex items-center justify-center mx-auto mb-4">
-                  <Bot className="h-8 w-8 text-info" />
-                </div>
-                <CardTitle>Meet your AI savings assistant</CardTitle>
-                <p className="text-muted-foreground">
-                  Give your AI agent a name. It will help you save money, review subscriptions, and find deals.
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="agentName">Agent Name</Label>
-                  <Input
-                    id="agentName"
-                    value={data.agentName}
-                    onChange={(e) => setData({ ...data, agentName: e.target.value })}
-                    placeholder="e.g., Sage, Alex, Morgan"
-                    className="text-center text-lg"
-                  />
-                </div>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">Your agent will help you:</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Review subscriptions monthly and flag duplicates</li>
-                    <li>• Suggest safe amounts to save each week</li>
-                    <li>• Find deals and coupons that match your spending</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </>
-          )}
-
-          {/* Step 3: Create First Pod */}
-          {currentStep === 3 && (
             <>
               <CardHeader className="text-center">
                 <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
@@ -221,8 +183,8 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* Step 4: Complete */}
-          {currentStep === 4 && (
+          {/* Step 3: Complete */}
+          {currentStep === 3 && (
             <>
               <CardHeader className="text-center">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -237,10 +199,6 @@ export default function OnboardingPage() {
                     <span className="font-medium">Display Name</span>
                     <span className="text-muted-foreground">{data.alias}</span>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="font-medium">AI Agent</span>
-                    <span className="text-muted-foreground">{data.agentName}</span>
-                  </div>
                   {data.firstPod.name && (
                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <span className="font-medium">First Pod</span>
@@ -254,7 +212,7 @@ export default function OnboardingPage() {
                   <ul className="text-sm text-muted-foreground space-y-1">
                     <li>• Explore challenges to automate your savings</li>
                     <li>• Connect with the community for motivation</li>
-                    <li>• Chat with {data.agentName} for personalized tips</li>
+                    <li>• Chat with your AI assistant for personalized tips</li>
                   </ul>
                 </div>
               </CardContent>
@@ -275,8 +233,7 @@ export default function OnboardingPage() {
               onClick={handleNext}
               disabled={
                 (currentStep === 1 && !canProceedStep1) ||
-                (currentStep === 2 && !canProceedStep2) ||
-                (currentStep === 3 && !canProceedStep3)
+                (currentStep === 2 && !canProceedStep3)
               }
             >
               Next

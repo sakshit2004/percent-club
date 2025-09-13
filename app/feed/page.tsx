@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,83 +31,33 @@ import {
   Heart,
   Share2
 } from "lucide-react"
-import type { Post, Community, Pod, LeaderboardEntry } from "@/types"
+import type { Community, Pod, LeaderboardEntry } from "@/types"
+import {
+  getHomeFeedFull,
+  createPost as createSocialPost,
+  likePost,
+  unlikePost,
+  subscribeRealtime,
+  heartbeatPresence,
+  getCommentsFull,
+  addComment,
+  type FeedItem,
+  type CommentWithAuthor,
+} from "@/lib/social"
+import { createClient } from "@/lib/supabase/client"
 
-// Mock data
-const mockFeedPosts: Post[] = [
-  {
-    id: "1",
-    authorHandle: "savingsstar",
-    authorAlias: "Sarah Chen",
-    authorAvatar: "/diverse-woman-avatar.png",
-    content: "Just hit 68% on my emergency fund goal! The round-up challenge has been a game changer. Small amounts really do add up over time.",
-    tags: ["#roundups", "#milestone", "#emergency-fund"],
-    visibility: "public",
-    reactions: 12,
-    hasReacted: false,
-    createdAt: "2024-01-15T14:30:00Z",
-  },
-  {
-    id: "2",
-    authorHandle: "budgetboss",
-    authorAlias: "Mike Rodriguez",
-    authorAvatar: "/man-avatar.png",
-    content: "Week 15 of the 52-week challenge complete! Already saved $120 and it's getting easier each week. Who else is doing this challenge?",
-    tags: ["#52week", "#challenge", "#progress"],
-    visibility: "public",
-    reactions: 8,
-    hasReacted: true,
-    createdAt: "2024-01-15T11:20:00Z",
-  },
-  {
-    id: "3",
-    authorHandle: "goaldigger",
-    authorAlias: "Emma Thompson",
-    authorAvatar: "/woman-avatar-2.png",
-    content: "My AI agent found me $45 in subscription savings this month! Cancelled two services I forgot about and switched to a cheaper phone plan.",
-    tags: ["#ai-agent", "#subscriptions", "#savings"],
-    visibility: "public",
-    reactions: 15,
-    hasReacted: false,
-    createdAt: "2024-01-15T09:45:00Z",
-  },
-  {
-    id: "4",
-    authorHandle: "frugalfriend",
-    authorAlias: "Alex Kim",
-    authorAvatar: "/diverse-person-avatars.png",
-    content: "Vacation fund is at 85%! Thanks to everyone in the Challenge Champions community for the motivation. Two more months and I'm off to Japan! 🎌",
-    tags: ["#vacation", "#goals", "#community"],
-    visibility: "followers",
-    reactions: 22,
-    hasReacted: false,
-    createdAt: "2024-01-14T16:10:00Z",
-  },
-  {
-    id: "5",
-    authorHandle: "cashbackqueen",
-    authorAlias: "Lisa Park",
-    authorAvatar: "/woman-avatar-3.png",
-    content: "Pro tip: Set up cashback alerts for your favorite stores. I've earned $23 this month just from regular shopping!",
-    tags: ["#cashback", "#tips", "#shopping"],
-    visibility: "public",
-    reactions: 6,
-    hasReacted: false,
-    createdAt: "2024-01-14T12:15:00Z",
-  },
-  {
-    id: "6",
-    authorHandle: "debtfree2024",
-    authorAlias: "James Wilson",
-    authorAvatar: "/man-avatar-2.png",
-    content: "Education pod: 42% → 45% this week! The weekly auto-save is working perfectly. Can't wait to hit 50%!",
-    tags: ["#education", "#autosave", "#progress"],
-    visibility: "public",
-    reactions: 9,
-    hasReacted: true,
-    createdAt: "2024-01-14T08:30:00Z",
-  },
-]
+type UIPost = {
+  id: string
+  authorHandle: string
+  authorAlias: string
+  authorAvatar?: string
+  content: string
+  tags: string[]
+  visibility: "public" | "followers"
+  reactions: number
+  hasReacted: boolean
+  createdAt: string
+}
 
 const mockCommunities: Community[] = [
   {
@@ -166,22 +117,34 @@ const mockLeaderboard: LeaderboardEntry[] = [
   { rank: 5, handle: "cashbackqueen", alias: "Lisa Park", progress: 38, streak: 9 },
 ]
 
-const mockUser = {
-  avatar: "/diverse-user-avatars.png",
-  alias: "You",
-  handle: "you",
-  level: 3,
-}
+type Me = { avatar?: string; alias: string; handle: string }
 
 export default function FeedPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [filter, setFilter] = useState("foryou")
   const [sort, setSort] = useState("top")
   const [searchQuery, setSearchQuery] = useState("")
-  const [posts, setPosts] = useState(mockFeedPosts)
+  const [posts, setPosts] = useState<UIPost[]>([])
+  const [pendingPosts, setPendingPosts] = useState<UIPost[]>([])
+  const [me, setMe] = useState<Me | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [commentsOpen, setCommentsOpen] = useState<string | null>(null)
   const { toast } = useToast()
+  const supabase = createClient()
+
+  // Map FeedItem -> UIPost
+  const toUIPost = useCallback((item: FeedItem): UIPost => ({
+    id: item.post.id,
+    authorHandle: item.author.handle,
+    authorAlias: item.author.name || item.author.handle,
+    authorAvatar: item.author.avatar_url || "/placeholder.svg",
+    content: item.post.text,
+    tags: [],
+    visibility: item.post.visibility,
+    reactions: item.likesCount,
+    hasReacted: item.likedByMe,
+    createdAt: item.post.created_at,
+  }), [])
 
   // Check for mobile
   useEffect(() => {
@@ -193,42 +156,150 @@ export default function FeedPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const handlePost = (content: string, tags: string[], visibility: "public" | "followers" | "community", communityId?: string, podProgress?: { podId: string, fromPercent: number, toPercent: number }) => {
+  // Load me (alias/handle/avatar)
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      const { data: u } = await supabase.auth.getUser()
+      if (!u.user) return
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("handle,name,avatar_url")
+        .eq("id", u.user.id)
+        .single()
+      if (!active) return
+      setMe({
+        handle: profile?.handle || u.user.id.slice(0, 6),
+        alias: profile?.name || profile?.handle || "You",
+        avatar: profile?.avatar_url || "/placeholder-user.jpg",
+      })
+    })()
+    return () => { active = false }
+  }, [supabase])
+
+  // Initial feed load
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const items = await getHomeFeedFull(50)
+      if (!cancelled) setPosts(items.map(toUIPost))
+    })()
+    return () => { cancelled = true }
+  }, [toUIPost])
+
+  // Presence heartbeat
+  useEffect(() => {
+    const id = setInterval(() => { heartbeatPresence().catch(() => {}) }, 30000)
+    heartbeatPresence().catch(() => {})
+    return () => clearInterval(id)
+  }, [])
+
+  // Realtime subscriptions
+  useEffect(() => {
+    const unsubscribe = subscribeRealtime({
+      posts: (payload) => {
+        if (payload.eventType === "INSERT") {
+          const item = payload.new
+          const mapped: UIPost = {
+            id: item.id,
+            authorHandle: "", // will be enriched on next refresh; quick insert at top
+            authorAlias: "",
+            authorAvatar: "/placeholder.svg",
+            content: item.text,
+            tags: [],
+            visibility: item.visibility,
+            reactions: 0,
+            hasReacted: false,
+            createdAt: item.created_at,
+          }
+          setPendingPosts(prev => [mapped, ...prev])
+        }
+        if (payload.eventType === "DELETE") {
+          const item = payload.old
+          // Remove from both live and pending buffers
+          setPosts(prev => prev.filter(p => p.id !== item.id))
+          setPendingPosts(prev => prev.filter(p => p.id !== item.id))
+        }
+      },
+      post_likes: (payload) => {
+        const postId = (payload.new?.post_id || payload.old?.post_id) as string
+        const delta = payload.eventType === "INSERT" ? 1 : payload.eventType === "DELETE" ? -1 : 0
+        if (!postId || delta === 0) return
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, reactions: Math.max(0, p.reactions + delta) } : p))
+      },
+    })
+    return () => { unsubscribe() }
+  }, [])
+
+  const mergePendingPosts = () => {
+    if (!pendingPosts.length) return
+    setPosts(prev => {
+      const existingIds = new Set(prev.map(p => p.id))
+      const uniquePending = pendingPosts.filter(p => !existingIds.has(p.id))
+      return [...uniquePending, ...prev]
+    })
+    setPendingPosts([])
+  }
+
+  const handlePost = async (
+    content: string,
+    _tags: string[],
+    visibility: "public" | "followers" | "community",
+    communityId?: string,
+  ) => {
     setIsLoading(true)
-    
-    const newPost: Post = {
-      id: Date.now().toString(),
-      authorHandle: mockUser.handle,
-      authorAlias: mockUser.alias,
-      authorAvatar: mockUser.avatar,
+    const optimistic: UIPost | null = me ? {
+      id: `temp-${Date.now()}`,
+      authorHandle: me.handle,
+      authorAlias: me.alias,
+      authorAvatar: me.avatar,
       content,
-      tags,
-      visibility,
+      tags: [],
+      visibility: visibility === "community" ? "public" : visibility,
       reactions: 0,
       hasReacted: false,
       createdAt: new Date().toISOString(),
-    }
-
-    setTimeout(() => {
-      setPosts(prev => [newPost, ...prev])
-      toast({
-        title: "Posted — nice one!",
-        description: "Your post has been shared with the community!",
-      })
+    } : null
+    if (optimistic) setPosts(prev => [optimistic, ...prev])
+    try {
+      const created = await createSocialPost({ text: content, visibility: visibility === "community" ? "public" : visibility, community_id: visibility === "community" ? (communityId || null) : null })
+      setPosts(prev => [
+        {
+          id: created.id,
+          authorHandle: me?.handle || "",
+          authorAlias: me?.alias || "",
+          authorAvatar: me?.avatar,
+          content: created.text,
+          tags: [],
+          visibility: created.visibility,
+          reactions: 0,
+          hasReacted: false,
+          createdAt: created.created_at,
+        },
+        ...prev.filter(p => p.id !== optimistic?.id),
+      ])
+      toast({ title: "Posted — nice one!", description: "Your post has been shared." })
+    } catch (e: any) {
+      // rollback
+      if (optimistic) setPosts(prev => prev.filter(p => p.id !== optimistic.id))
+      toast({ title: "Couldn't post", description: e?.message || "Please try again.", variant: "destructive" as any })
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
-  const handleReact = (postId: string) => {
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            hasReacted: !post.hasReacted,
-            reactions: post.hasReacted ? post.reactions - 1 : post.reactions + 1
-          }
-        : post
-    ))
+  const handleReact = async (postId: string) => {
+    const target = posts.find(p => p.id === postId)
+    if (!target) return
+    const nextLiked = !target.hasReacted
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, hasReacted: nextLiked, reactions: Math.max(0, p.reactions + (nextLiked ? 1 : -1)) } : p))
+    try {
+      if (nextLiked) await likePost(postId)
+      else await unlikePost(postId)
+    } catch {
+      // rollback
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, hasReacted: !nextLiked, reactions: Math.max(0, p.reactions + (!nextLiked ? 1 : -1)) } : p))
+    }
   }
 
   const handleSave = (postId: string) => {
@@ -290,7 +361,7 @@ export default function FeedPage() {
       // Filter by type
       if (filter === "following") {
         // In real app, this would check if user follows the author
-        return post.visibility === "followers" || post.authorHandle === mockUser.handle
+        return post.visibility === "followers" || (!!me && post.authorHandle === me.handle)
       }
       if (filter === "communities") {
         return post.tags.some(tag => tag.includes("community") || tag.includes("challenge"))
@@ -298,7 +369,7 @@ export default function FeedPage() {
       
       return true
     })
-  }, [posts, searchQuery, filter])
+  }, [posts, searchQuery, filter, me])
 
   const sortedPosts = useMemo(() => {
     return [...filteredPosts].sort((a, b) => {
@@ -332,7 +403,7 @@ export default function FeedPage() {
             <Input
               placeholder="Search tips, #tags, people…"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -382,13 +453,22 @@ export default function FeedPage() {
 
           {/* Post Composer */}
           <PostComposer
-            userAvatar={mockUser.avatar}
-            userAlias={mockUser.alias}
+            userAvatar={me?.avatar || "/placeholder-user.jpg"}
+            userAlias={me?.alias || "You"}
             onPost={handlePost}
             isLoading={isLoading}
-            communities={mockCommunities}
+            communities={[]}
             pods={mockPods}
           />
+
+          {/* New posts banner */}
+          {pendingPosts.length > 0 && (
+            <div className="sticky top-16 z-10 mb-4">
+              <Button onClick={mergePendingPosts} className="w-full" variant="secondary">
+                <Sparkles className="h-4 w-4 mr-2" /> Show {pendingPosts.length} new {pendingPosts.length === 1 ? "post" : "posts"}
+              </Button>
+            </div>
+          )}
 
           {/* Timeline */}
           <div className="space-y-4 mt-6">
@@ -404,7 +484,7 @@ export default function FeedPage() {
                 onHide={handleHide}
                 onDelete={handleDelete}
                 onOpenComments={() => setCommentsOpen(post.id)}
-                isOwner={post.authorHandle === mockUser.handle}
+                isOwner={!!me && post.authorHandle === me.handle}
               />
             ))}
           </div>
@@ -588,7 +668,7 @@ function PostComposer({ userAvatar, userAlias, onPost, isLoading, communities, p
               <Textarea
                 placeholder="Share a savings tip, question, or win…"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                 className="min-h-[100px] resize-none border-0 p-0 focus-visible:ring-0"
               />
             </div>
@@ -626,7 +706,7 @@ function PostComposer({ userAvatar, userAlias, onPost, isLoading, communities, p
                   type="number"
                   placeholder="From %"
                   value={fromPercent || ""}
-                  onChange={(e) => setFromPercent(Number(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFromPercent(Number(e.target.value))}
                   className="w-20"
                 />
                 <span>→</span>
@@ -634,7 +714,7 @@ function PostComposer({ userAvatar, userAlias, onPost, isLoading, communities, p
                   type="number"
                   placeholder="To %"
                   value={toPercent || ""}
-                  onChange={(e) => setToPercent(Number(e.target.value))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setToPercent(Number(e.target.value))}
                   className="w-20"
                 />
               </div>
@@ -724,7 +804,7 @@ function PostComposer({ userAvatar, userAlias, onPost, isLoading, communities, p
 
 // Post Card Component
 interface PostCardProps {
-  post: Post
+  post: UIPost
   onReact: (postId: string) => void
   onSave: (postId: string) => void
   onFollow: (handle: string) => void
@@ -872,25 +952,45 @@ interface CommentsDrawerProps {
 
 function CommentsDrawer({ isOpen, onClose, postId }: CommentsDrawerProps) {
   const [newComment, setNewComment] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [comments, setComments] = useState<CommentWithAuthor[]>([])
 
-  const mockComments = [
-    {
-      id: "1",
-      author: "budgetboss",
-      alias: "Mike Rodriguez",
-      avatar: "/man-avatar.png",
-      content: "Great tip! I've been doing this for 3 months now.",
-      createdAt: "2024-01-15T15:00:00Z",
-    },
-    {
-      id: "2",
-      author: "goaldigger",
-      alias: "Emma Thompson",
-      avatar: "/woman-avatar-2.png",
-      content: "Same here! The round-ups really add up faster than I expected.",
-      createdAt: "2024-01-15T15:30:00Z",
-    },
-  ]
+  useEffect(() => {
+    let cancelled = false
+    if (!isOpen || !postId) return
+    ;(async () => {
+      const list = await getCommentsFull(postId)
+      if (!cancelled) setComments(list)
+    })()
+    return () => { cancelled = true }
+  }, [isOpen, postId])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const unsubscribe = subscribeRealtime({
+      comments: async (payload) => {
+        const c = payload.new || payload.old
+        if (!c || c.post_id !== postId) return
+        // Re-fetch to include author info
+        const list = await getCommentsFull(postId)
+        setComments(list)
+      }
+    })
+    return () => { unsubscribe() }
+  }, [isOpen, postId])
+
+  const handleSubmit = async () => {
+    if (!newComment.trim()) return
+    setIsSubmitting(true)
+    try {
+      await addComment(postId, newComment.trim())
+      setNewComment("")
+      const list = await getCommentsFull(postId)
+      setComments(list)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -902,23 +1002,24 @@ function CommentsDrawer({ isOpen, onClose, postId }: CommentsDrawerProps) {
         </DialogHeader>
         <div className="space-y-4">
           <div className="max-h-96 overflow-y-auto space-y-4">
-            {mockComments.map((comment) => (
+            {comments.map(({ comment, author }) => (
               <div key={comment.id} className="flex gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={comment.avatar} />
-                  <AvatarFallback>{comment.alias[0]}</AvatarFallback>
+                  <AvatarImage src={author.avatar_url || "/placeholder-user.jpg"} />
+                  <AvatarFallback>{(author.name || author.handle || "?").slice(0,1)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">{comment.alias}</span>
-                    <span className="text-xs text-muted-foreground">@{comment.author}</span>
-                    <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground">2h</span>
+                    <span className="font-medium text-sm">{author.name || author.handle}</span>
+                    <span className="text-xs text-muted-foreground">@{author.handle}</span>
                   </div>
-                  <p className="text-sm">{comment.content}</p>
+                  <p className="text-sm">{comment.text}</p>
                 </div>
               </div>
             ))}
+            {comments.length === 0 && (
+              <div className="text-sm text-muted-foreground">Be the first to comment.</div>
+            )}
           </div>
           <div className="flex gap-3 pt-4 border-t">
             <Avatar className="h-8 w-8">
@@ -932,7 +1033,7 @@ function CommentsDrawer({ isOpen, onClose, postId }: CommentsDrawerProps) {
                 className="min-h-[60px] resize-none"
               />
             </div>
-            <Button size="sm" disabled={!newComment.trim()}>
+            <Button size="sm" disabled={!newComment.trim() || isSubmitting} onClick={handleSubmit}>
               <Send className="h-4 w-4" />
             </Button>
           </div>

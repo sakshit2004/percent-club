@@ -29,10 +29,13 @@ import {
   EyeOff,
   Copy,
   Download,
-  Undo
+  Undo,
+  RefreshCw,
+  Link as LinkIcon
 } from "lucide-react"
+import { PanelGroup as ResizablePanelGroup, Panel as ResizablePanel, PanelResizeHandle as ResizableHandle } from "react-resizable-panels"
 import type { Subscription, Offer, AgentProposal, Pod } from "@/types"
-import { usePodsLive, useRecurring, useInstitutions, useRoundups } from "@/lib/penny/client"
+import { usePodsLive, useRecurring, useInstitutions, useRoundups, useLinkedCounts } from "@/lib/penny/client"
 
 // Mock data - moved outside component to prevent recreation
 const mockSubscriptions: Subscription[] = [
@@ -180,20 +183,105 @@ export default function AgentPage() {
   const institutionsQuery = useInstitutions()
   const roundupsQuery = useRoundups()
 
-  // Initialize with welcome message
+  // Initialize with hardcoded demo conversation showcasing capabilities
   useEffect(() => {
-    const welcomeMessage: ChatMessage = {
-      id: "welcome",
-      role: "agent",
-      text: `Hi! I'm ${agentName}, your personal savings assistant. I'm here to help you cut costs, find deals, and save more money. I can review your subscriptions, suggest safe amounts to save, and find better deals for things you're buying. What would you like to explore?`,
-      timestamp: new Date().toISOString(),
-      suggestions: [
-        { label: "Run monthly review", action: "review-subscriptions" },
-        { label: "Suggest weekly save", action: "safe-to-save" },
-        { label: "Find cheaper internet", action: "find-deals" },
-      ],
-    }
-    setMessages([welcomeMessage])
+    const now = new Date().toISOString()
+    const demoMessages: ChatMessage[] = [
+      {
+        id: "m0",
+        role: "agent",
+        text: `Hi! I'm ${agentName}, your savings copilot. I can: review subscriptions and propose cancellations/reschedules, suggest a safe weekly save, find and log savings from deals, sync data, and even be renamed. Want a tour?`,
+        timestamp: now,
+        suggestions: [
+          { label: "Run monthly review", action: "review-subscriptions" },
+          { label: "Suggest weekly save", action: "safe-to-save" },
+          { label: "Find me deals", action: "find-deals" },
+          { label: "Connect bank", action: "connect-bank" },
+          { label: "Rename agent", action: "rename-agent" },
+        ],
+      },
+      {
+        id: "m1",
+        role: "user",
+        text: "Run the monthly review.",
+        timestamp: now,
+      },
+      {
+        id: "m2",
+        role: "agent",
+        text: "I found 5 active subscriptions with potential savings of $28/mo. Netflix might be duplicate, Telco Plan looks overpriced, Gym shows low usage.",
+        timestamp: now,
+        suggestions: [
+          { label: "Show my subscriptions", action: "show-subscriptions" },
+          { label: "Cancel Netflix", action: "cancel-netflix" },
+          { label: "Reschedule Telco", action: "reschedule-telco" },
+        ],
+      },
+      {
+        id: "m3",
+        role: "user",
+        text: "How much can I safely save this week?",
+        timestamp: now,
+      },
+      {
+        id: "m4",
+        role: "agent",
+        text: "You can safely save $24/week. Bills cluster Tue–Thu, so I keep a $25 buffer. Want to preview the deposit?",
+        timestamp: now,
+        suggestions: [
+          { label: "Preview $24 deposit", action: "preview-save" },
+          { label: "Schedule weekly saves", action: "schedule-saves" },
+        ],
+      },
+      {
+        id: "m5",
+        role: "user",
+        text: "Any deals for me?",
+        timestamp: now,
+      },
+      {
+        id: "m6",
+        role: "agent",
+        text: "I found a 10% Uber Eats coupon, 8% off Amazon gift card, Spotify cashback, and a cheaper telco plan.",
+        timestamp: now,
+        suggestions: [
+          { label: "Show deals", action: "show-deals" },
+          { label: "Redeem Amazon Gift Card", action: "redeem-amazon-gc" },
+        ],
+      },
+      {
+        id: "m7",
+        role: "user",
+        text: "Can you connect my bank and sync?",
+        timestamp: now,
+      },
+      {
+        id: "m8",
+        role: "agent",
+        text: "Tap to connect your bank, then you can sync transactions anytime.",
+        timestamp: now,
+        suggestions: [
+          { label: "Connect bank", action: "connect-bank" },
+          { label: "Sync now", action: "sync-now" },
+        ],
+      },
+      {
+        id: "m9",
+        role: "user",
+        text: "Also, can I rename you?",
+        timestamp: now,
+      },
+      {
+        id: "m10",
+        role: "agent",
+        text: "Sure — pick any name you like.",
+        timestamp: now,
+        suggestions: [
+          { label: "Rename agent", action: "rename-agent" },
+        ],
+      },
+    ]
+    setMessages(demoMessages)
   }, [agentName])
 
   // Check for mobile
@@ -250,6 +338,12 @@ export default function AgentPage() {
     setIsLoading(false)
   }
 
+  const handleClearConversation = () => {
+    setMessages([])
+    setThreadId(null)
+    toast({ title: "Conversation cleared" })
+  }
+
   const approvePending = async () => {
     if (!pendingProposal) return
     setIsLoading(true)
@@ -300,6 +394,52 @@ export default function AgentPage() {
         break
       case "show-subscriptions":
         setActiveTab("subs")
+        break
+      case "cancel-netflix": {
+        const sub = mockSubscriptions.find(s => s.merchant.toLowerCase().includes("netflix"))
+        if (sub) {
+          handleCancelSubscription(sub)
+          setActiveTab("subs")
+        }
+        break
+      }
+      case "reschedule-telco": {
+        const sub = mockSubscriptions.find(s => s.merchant.toLowerCase().includes("telco"))
+        if (sub) {
+          handleRescheduleSubscription(sub)
+          setActiveTab("subs")
+        }
+        break
+      }
+      case "preview-save": {
+        setActiveTab("save")
+        setPreviewDialogOpen(true)
+        break
+      }
+      case "schedule-saves": {
+        toast({ title: "Scheduled saves", description: "Weekly autosave will be available soon." })
+        setActiveTab("save")
+        break
+      }
+      case "show-deals":
+        setActiveTab("deals")
+        break
+      case "redeem-amazon-gc": {
+        const offer = mockOffers.find(o => o.label.toLowerCase().includes("amazon"))
+        if (offer) {
+          handleRedeemOffer(offer)
+          setActiveTab("deals")
+        }
+        break
+      }
+      case "connect-bank":
+        window.location.assign('/connect')
+        break
+      case "sync-now":
+        fetch('/api/sync/transactions', { method: 'POST' }).then(() => toast({ title: 'Sync started' })).catch(() => toast({ title: 'Sync failed', description: 'Please try again.' }))
+        break
+      case "rename-agent":
+        setRenameDialogOpen(true)
         break
       default:
         console.log("Unknown action:", action)
@@ -443,7 +583,7 @@ export default function AgentPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Bot className="h-4 w-4 text-primary-foreground" />
@@ -453,29 +593,32 @@ export default function AgentPage() {
               <p className="text-sm text-muted-foreground">AI Savings Assistant</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <Badge variant="outline" className="text-xs">Consent-first</Badge>
-              <Badge variant="outline" className="text-xs">Non-custodial</Badge>
-              <Badge variant="outline" className="text-xs">Privacy by default</Badge>
-            </div>
+          <div className="flex items-center gap-3">
+            <BankStatus />
+            <Button variant="outline" size="sm" onClick={handleClearConversation}>
+              <X className="h-4 w-4 mr-2" />
+              Clear
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setRenameDialogOpen(true)}>
-            <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-4 w-4 mr-2" />
               Rename
-          </Button>
+            </Button>
           </div>
         </div>
-        <div className="container mx-auto px-4 pb-2">
-          <p className="text-xs text-muted-foreground">We only propose; you approve. No funds move without consent.</p>
+        <div className="container mx-auto px-4 pb-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-stretch">
+            <RoundupsCard />
+            <InstitutionsCard />
+            <ConsentBadges />
+          </div>
         </div>
         {process.env.NODE_ENV !== 'production' && (
           <div className="container mx-auto px-4 pb-3">
             <div className="rounded-md border p-3 flex items-center justify-between bg-muted/30">
               <span className="text-xs text-muted-foreground">Developer MCP Triggers</span>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleSendMessage("Create a Plaid Sandbox public token for institution ins_3, exchange it, then sync transactions and recurring.")}>Create public token</Button>
-                <Button size="sm" variant="outline" onClick={() => handleSendMessage("Fire transactions webhook for my first item.")}>Fire webhook</Button>
-                <Button size="sm" variant="outline" onClick={() => handleSendMessage("Set my first item to login required (simulate relink).")}>Login required</Button>
+                <Button size="sm" variant="outline" onClick={() => fetch('/api/sync/transactions',{method:'POST'}).then(()=>toast({title:'Sync started'}))}><RefreshCw className="h-3 w-3 mr-2"/>Sync now</Button>
+                <Button size="sm" variant="outline" onClick={() => window.location.assign('/connect')}><LinkIcon className="h-3 w-3 mr-2"/>Connect bank</Button>
               </div>
             </div>
           </div>
@@ -485,38 +628,42 @@ export default function AgentPage() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {!isMobile ? (
-          <>
-        {/* Chat Panel */}
-        <div className="flex-1 border-r">
-              <ChatInterface
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            onSuggestionClick={handleSuggestionClick}
-            isLoading={isLoading}
-            agentName={agentName}
-          />
-        </div>
-
-            {/* Assistant Console */}
-        <div className="w-96 flex flex-col">
-              <AssistantConsole
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                subscriptions={mockSubscriptions}
-                offers={getFilteredOffers}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                riskLevel={riskLevel}
-                onRiskChange={setRiskLevel}
-                safeToSaveAmount={getSafeToSaveAmount()}
-                onCancelSubscription={handleCancelSubscription}
-                onRescheduleSubscription={handleRescheduleSubscription}
-                onMarkLowUsage={handleMarkLowUsage}
-                onRedeemOffer={handleRedeemOffer}
-                onSafeToSave={handleSafeToSave}
-              />
-            </div>
-          </>
+          <ResizablePanelGroup direction="horizontal" className="w-full h-full">
+            <ResizablePanel defaultSize={65} minSize={35} className="min-w-0 min-h-0 border-r">
+              <div className="h-full w-full min-h-0">
+                <ChatInterface
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  onSuggestionClick={handleSuggestionClick}
+                  isLoading={isLoading}
+                  agentName={agentName}
+                />
+              </div>
+            </ResizablePanel>
+            <ResizableHandle className="w-1 bg-border hover:bg-primary/40 transition-colors cursor-col-resize" />
+            <ResizablePanel defaultSize={35} minSize={20} className="min-w-[280px] max-w-[520px] min-h-0">
+              <div className="h-full w-full min-h-0 flex flex-col">
+                <AssistantConsole
+                  activeTab={activeTab}
+                  onTabChange={setActiveTab}
+                  subscriptions={mockSubscriptions}
+                  offers={getFilteredOffers}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  riskLevel={riskLevel}
+                  onRiskChange={setRiskLevel}
+                  safeToSaveAmount={getSafeToSaveAmount()}
+                  onCancelSubscription={handleCancelSubscription}
+                  onRescheduleSubscription={handleRescheduleSubscription}
+                  onMarkLowUsage={handleMarkLowUsage}
+                  onRedeemOffer={handleRedeemOffer}
+                  onSafeToSave={handleSafeToSave}
+                  recurringQuery={recurringQuery}
+                  institutionsQuery={institutionsQuery}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         ) : (
           /* Mobile Layout */
           <div className="flex-1 flex flex-col">
@@ -657,88 +804,170 @@ function ChatInterface({ messages, onSendMessage, onSuggestionClick, isLoading, 
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            {message.role === "agent" && (
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <Bot className="h-4 w-4 text-primary-foreground" />
-              </div>
-            )}
-            <div className={`max-w-[80%] ${message.role === "user" ? "order-first" : ""}`}>
-              <Card className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
-                <CardContent className="p-3">
-                  <p className="text-sm">{message.text}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </CardContent>
-              </Card>
-              {message.suggestions && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {message.suggestions.map((suggestion, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onSuggestionClick(suggestion.action)}
-                      className="text-xs"
-                    >
-                      {suggestion.label}
-                    </Button>
-                  ))}
+      <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
+        <ResizablePanel defaultSize={75} minSize={40} className="min-h-0">
+          <div className="h-full overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                {message.role === "agent" && (
+                  <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+                <div className={`max-w-[80%] ${message.role === "user" ? "order-first" : ""}`}>
+                  <Card className={message.role === "user" ? "bg-primary text-primary-foreground" : ""}>
+                    <CardContent className="p-3">
+                      <p className="text-sm">{message.text}</p>
+                      <p className="text-xs opacity-70 mt-1">
+                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  {message.suggestions && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {message.suggestions.map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onSuggestionClick(suggestion.action)}
+                          className="text-xs"
+                        >
+                          {suggestion.label}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            {message.role === "user" && (
-              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-medium">U</span>
+                {message.role === "user" && (
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-medium">U</span>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                  <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+                </div>
+                <Card className="bg-muted/50">
+                  <CardContent className="p-3">
+                    <p className="text-sm text-muted-foreground">Thinking...</p>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
+        </ResizablePanel>
+        <ResizableHandle className="h-1 bg-border hover:bg-primary/40 transition-colors cursor-row-resize" />
+        <ResizablePanel defaultSize={25} minSize={15} className="min-h-[120px]">
+          <div className="border-t p-4 h-full flex flex-col">
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Button variant="outline" size="sm" onClick={() => onSuggestionClick("review-subscriptions")}>
+                Run monthly review
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onSuggestionClick("safe-to-save")}>
+                Suggest weekly save
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onSuggestionClick("find-deals")}>
+                Find cheaper internet
+              </Button>
             </div>
-            <Card className="bg-muted/50">
-              <CardContent className="p-3">
-                <p className="text-sm text-muted-foreground">Thinking...</p>
-              </CardContent>
-            </Card>
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <Input
+                value={inputValue}
+                onChange={(e: any) => setInputValue((e?.target?.value as string) || "")}
+                placeholder="Ask me to cut costs, find deals, or propose a weekly save…"
+                disabled={isLoading}
+              />
+              <Button type="submit" disabled={!inputValue.trim() || isLoading}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
           </div>
-        )}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="border-t p-4">
-        <div className="flex flex-wrap gap-2 mb-3">
-          <Button variant="outline" size="sm" onClick={() => onSuggestionClick("review-subscriptions")}>
-            Run monthly review
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onSuggestionClick("safe-to-save")}>
-            Suggest weekly save
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onSuggestionClick("find-deals")}>
-            Find cheaper internet
-          </Button>
-        </div>
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            value={inputValue}
-            onChange={(e: any) => setInputValue((e?.target?.value as string) || "")}
-            placeholder="Ask me to cut costs, find deals, or propose a weekly save…"
-            disabled={isLoading}
-          />
-          <Button type="submit" disabled={!inputValue.trim() || isLoading}>
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
+  )
+}
+
+function BankStatus() {
+  const [linked, setLinked] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  useEffect(() => {
+    setLinked(localStorage.getItem('bank_linked') === '1')
+    const i = setInterval(() => setLinked(localStorage.getItem('bank_linked') === '1'), 5000)
+    return () => clearInterval(i)
+  }, [])
+  if (!linked) {
+    return (
+      <Button size="sm" onClick={() => (window.location.href = '/connect')}>
+        <LinkIcon className="h-4 w-4 mr-2" />Connect bank
+      </Button>
+    )
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <Badge variant="success" className="text-xs">Bank linked</Badge>
+      <Button size="sm" variant="outline" disabled={syncing} onClick={async () => {
+        try {
+          setSyncing(true)
+          await fetch('/api/sync/transactions', { method: 'POST' })
+        } finally { setSyncing(false) }
+      }}>
+        <RefreshCw className="h-3 w-3 mr-2" />{syncing ? 'Syncing…' : 'Sync now'}
+      </Button>
+    </div>
+  )
+}
+
+function RoundupsCard() {
+  const { data, isLoading } = useRoundups()
+  const pending = data?.pending_cents ?? 0
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-xs text-muted-foreground">Round-ups</div>
+            <div className="text-2xl font-semibold">${(pending/100).toFixed(2)}</div>
+          </div>
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">Spare change accrued from recent card purchases — ready to move to a pod.</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function InstitutionsCard() {
+  const { data: linked } = useLinkedCounts()
+  const count = linked?.accounts ?? 0
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="text-xs text-muted-foreground">Connections</div>
+        <div className="text-2xl font-semibold">{count}</div>
+        <p className="mt-1 text-[11px] text-muted-foreground">Total linked accounts across your banks.</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ConsentBadges() {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex gap-1">
+          <Badge variant="outline" className="text-[10px]">Consent-first</Badge>
+          <Badge variant="outline" className="text-[10px]">Non-custodial</Badge>
+          <Badge variant="outline" className="text-[10px]">Privacy by default</Badge>
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">We propose; you approve. Your money stays in your bank.</p>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -758,6 +987,8 @@ interface AssistantConsoleProps {
   onMarkLowUsage: (subscriptionId: string) => void
   onRedeemOffer: (offer: Offer) => void
   onSafeToSave: (amount: number) => void
+  recurringQuery: any
+  institutionsQuery: any
 }
 
 function AssistantConsole({
@@ -775,6 +1006,8 @@ function AssistantConsole({
   onMarkLowUsage,
   onRedeemOffer,
   onSafeToSave,
+  recurringQuery,
+  institutionsQuery,
 }: AssistantConsoleProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="flex-1 flex flex-col">
@@ -790,7 +1023,7 @@ function AssistantConsole({
         <TabsContent value="subs" className="p-4 space-y-4 mt-0">
                 <div className="flex items-center justify-between">
             <h3 className="font-semibold">Monthly Review</h3>
-            <Badge variant="outline">{recurringQuery.data?.items?.length ?? 0} subscriptions</Badge>
+            <Badge variant="outline">{recurringQuery.data?.rows?.length ?? 0} subscriptions</Badge>
           </div>
           {recurringQuery.isLoading ? (
             <div className="space-y-2">
@@ -799,9 +1032,9 @@ function AssistantConsole({
             </div>
           ) : recurringQuery.isError ? (
             <div className="text-sm text-red-500">Failed to load recurring. <button className="underline" onClick={() => recurringQuery.refetch()}>Retry</button></div>
-          ) : (recurringQuery.data?.items?.length ? (
+          ) : (recurringQuery.data?.rows?.length ? (
             <SubscriptionTable
-              subscriptions={(recurringQuery.data.items || []).map((r: any) => ({ id: r.id, merchant: r.merchant, monthlyCost: (r.amount_cents ?? 0) / 100, nextChargeDate: r.next_due_date || "", status: "active", flags: r.flags || [] }))}
+              subscriptions={(recurringQuery.data.rows || []).map((r: any) => ({ id: r.id, merchant: r.merchant, monthlyCost: (r.amount_cents ?? 0) / 100, nextChargeDate: r.next_due_date || "", status: "active", flags: r.flags || [] }))}
               onCancel={onCancelSubscription}
               onReschedule={onRescheduleSubscription}
               onMarkLowUsage={onMarkLowUsage}
@@ -825,7 +1058,7 @@ function AssistantConsole({
               <TabsContent value="deals" className="p-4 space-y-4 mt-0">
                 <div className="flex items-center justify-between">
             <h3 className="font-semibold">Deals</h3>
-            <Badge variant="outline">{institutionsQuery.data?.length ?? 0} connections</Badge>
+            <Badge variant="outline">{institutionsQuery.data?.items?.length ?? 0} connections</Badge>
                 </div>
           <Input
             placeholder="What are you buying?"
@@ -900,7 +1133,7 @@ function SubscriptionTable({ subscriptions, onCancel, onReschedule, onMarkLowUsa
       overpriced: "destructive", 
       "low-usage": "secondary"
     } as const
-    const variant = (variants as unknown as Record<string, "destructive" | "secondary" | "default" | "outline" | "secondary" | "success" | "warning">)[flag] || "outline"
+    const variant = (variants as unknown as Record<string, "destructive" | "secondary" | "default" | "outline" | "success">)[flag] || "outline"
     return <Badge variant={variant} className="text-xs">{flag}</Badge>
   }
 

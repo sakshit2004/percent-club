@@ -39,4 +39,12 @@ export function usePodsLive() {
   });
 }
 
+export function useLinkedCounts() {
+  return useQuery({
+    queryKey: ["linked-counts"],
+    queryFn: () => fetchJson<{ items: number; accounts: number }>("/api/plaid/linked"),
+    refetchInterval: 15000,
+  })
+}
+
 

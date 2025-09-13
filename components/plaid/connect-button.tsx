@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { usePlaidLink } from "react-plaid-link"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useBankLinked } from "@/hooks/use-bank-linked"
 
 export function PlaidConnectButton() {
   const { toast } = useToast()
+  const linked = useBankLinked()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
 
@@ -59,11 +62,9 @@ export function PlaidConnectButton() {
 
   const { open, ready } = usePlaidLink(config || { token: "" })
 
-  return (
-    <Button onClick={() => open()} disabled={!ready || !linkToken || isCreating}>
-      {isCreating ? "Preparing..." : "Connect bank"}
-    </Button>
-  )
+  if (linked) return <Badge variant="success" className="px-3 py-1 text-sm">Bank linked</Badge>
+
+  return <Button onClick={() => open()} disabled={!ready || !linkToken || isCreating}>{isCreating ? "Preparing..." : "Connect bank"}</Button>
 }
 
 

@@ -10,6 +10,7 @@ import { QueryProvider } from "@/providers/query-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { MainNav } from "@/components/navigation/main-nav"
 import { SiteFooter } from "@/components/navigation/site-footer"
+import { AppShell } from "@/components/navigation/app-shell"
 import { PerformanceMonitor } from "@/components/common/performance-monitor"
 
 export const metadata: Metadata = {
@@ -31,8 +32,9 @@ export default function RootLayout({
             <QueryProvider>
               <PerformanceMonitor />
               <MainNav />
-              {children}
-              <SiteFooter />
+              <AppShell>
+                {children}
+              </AppShell>
               <Toaster />
             </QueryProvider>
           </ThemeProvider>

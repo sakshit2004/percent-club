@@ -57,6 +57,9 @@ export async function POST() {
       // Upsert
       const { error: upErr } = await admin.from("transactions").upsert(rows, { onConflict: "plaid_tx_id" })
       if (upErr) throw upErr
+
+      // mark item as synced
+      await admin.from("plaid_items").update({ last_synced_at: new Date().toISOString() }).eq("item_id", it.item_id)
     }
 
     return NextResponse.json({ synced: total })

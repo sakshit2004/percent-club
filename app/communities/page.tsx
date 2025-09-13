@@ -9,58 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { Search, Users, TrendingUp, Filter, Plus } from "lucide-react"
 import type { Community, LeaderboardEntry } from "@/types"
-
-// Mock data
-const mockCommunities: Community[] = [
-  {
-    id: "1",
-    name: "Education Savers",
-    description: "From textbooks to tuition — % at a time",
-    membersCount: 1234,
-    isJoined: true,
-    avatar: "/emergency-fund-icon.png",
-  },
-  {
-    id: "2",
-    name: "52-Week Challengers",
-    description: "Steady, increasing weekly saves",
-    membersCount: 567,
-    isJoined: false,
-    avatar: "/challenge-icon.jpg",
-  },
-  {
-    id: "3",
-    name: "Round-Up Ninjas",
-    description: "Pennies to progress",
-    membersCount: 892,
-    isJoined: true,
-    avatar: "/vacation-icon.png",
-  },
-  {
-    id: "4",
-    name: "Travel Light",
-    description: "Trips without the guilt",
-    membersCount: 445,
-    isJoined: false,
-    avatar: "/beginner-icon.jpg",
-  },
-  {
-    id: "5",
-    name: "Debt Snowball Crew",
-    description: "Little wins, big momentum",
-    membersCount: 678,
-    isJoined: false,
-    avatar: "/ai-icon.png",
-  },
-  {
-    id: "6",
-    name: "Emergency Fund Heroes",
-    description: "Building emergency funds together, one dollar at a time",
-    membersCount: 2156,
-    isJoined: false,
-    avatar: "/goal-icon.png",
-  },
-]
+import { 
+  listCommunities, 
+  getMyJoinedCommunityIds, 
+  getCommunityMemberCounts, 
+  joinCommunity, 
+  leaveCommunity, 
+  subscribeRealtime 
+} from "@/lib/social"
 
 const mockTopMembers: LeaderboardEntry[] = [
   { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
@@ -72,7 +28,7 @@ export default function CommunitiesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filter, setFilter] = useState("all")
   const [category, setCategory] = useState("all")
-  const [communities, setCommunities] = useState(mockCommunities)
+  const [communities, setCommunities] = useState<Community[]>([])
   const [isMobile, setIsMobile] = useState(false)
   const { toast } = useToast()
 
@@ -86,34 +42,114 @@ export default function CommunitiesPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const handleJoin = (communityId: string) => {
+  // Initial load
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const base = await listCommunities(200)
+      const joined = await getMyJoinedCommunityIds()
+      const counts = await getCommunityMemberCounts(base.map((c: any) => c.id))
+      if (cancelled) return
+      const mapped: Community[] = base.map((c: any) => ({
+        id: c.id,
+        name: c.title,
+        description: c.description || "",
+        membersCount: counts[c.id] ?? 0,
+        isJoined: joined.has(c.id),
+        avatar: c.cover_url || "/placeholder.svg",
+      }))
+      setCommunities(mapped)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  // Realtime updates
+  useEffect(() => {
+    const unsubscribe = subscribeRealtime({
+      communities: (payload) => {
+        if (payload.eventType === "INSERT") {
+          const c = payload.new
+          setCommunities(prev => [{
+            id: c.id,
+            name: c.title,
+            description: c.description || "",
+            membersCount: 0,
+            isJoined: false,
+            avatar: c.cover_url || "/placeholder.svg",
+          }, ...prev])
+        } else if (payload.eventType === "UPDATE") {
+          const c = payload.new
+          setCommunities(prev => prev.map(p => p.id === c.id ? {
+            ...p,
+            name: c.title,
+            description: c.description || "",
+            avatar: c.cover_url || p.avatar,
+          } : p))
+        } else if (payload.eventType === "DELETE") {
+          const c = payload.old
+          setCommunities(prev => prev.filter(p => p.id !== c.id))
+        }
+      },
+      community_members: (payload) => {
+        if (payload.eventType === "INSERT") {
+          const cm = payload.new
+          setCommunities(prev => prev.map(c => c.id === cm.community_id ? { ...c, membersCount: c.membersCount + 1 } : c))
+        } else if (payload.eventType === "DELETE") {
+          const cm = payload.old
+          setCommunities(prev => prev.map(c => c.id === cm.community_id ? { ...c, membersCount: Math.max(0, c.membersCount - 1) } : c))
+        }
+      }
+    })
+    return () => { unsubscribe() }
+  }, [])
+
+  const handleJoin = async (communityId: string) => {
     setCommunities(prev => prev.map(community => 
       community.id === communityId 
         ? { ...community, isJoined: true }
         : community
     ))
-    const community = communities.find((c) => c.id === communityId)
-    toast({
-      title: `Joined ${community?.name} — welcome!`,
-      description: "You'll now see posts from this community in your feed.",
-    })
+    try {
+      await joinCommunity(communityId)
+      const community = communities.find((c) => c.id === communityId)
+      toast({
+        title: `Joined ${community?.name} — welcome!`,
+        description: "You'll now see posts from this community in your feed.",
+      })
+    } catch (e: any) {
+      setCommunities(prev => prev.map(community => 
+        community.id === communityId 
+          ? { ...community, isJoined: false }
+          : community
+      ))
+      toast({ title: "Couldn't join", description: e?.message || "Please try again." })
+    }
   }
 
-  const handleLeave = (communityId: string) => {
+  const handleLeave = async (communityId: string) => {
     setCommunities(prev => prev.map(community => 
       community.id === communityId 
         ? { ...community, isJoined: false }
         : community
     ))
-    const community = communities.find((c) => c.id === communityId)
-    toast({
-      title: `Left ${community?.name}`,
-      description: "You can rejoin anytime.",
-    })
+    try {
+      await leaveCommunity(communityId)
+      const community = communities.find((c) => c.id === communityId)
+      toast({
+        title: `Left ${community?.name}`,
+        description: "You can rejoin anytime.",
+      })
+    } catch (e: any) {
+      setCommunities(prev => prev.map(community => 
+        community.id === communityId 
+          ? { ...community, isJoined: true }
+          : community
+      ))
+      toast({ title: "Couldn't leave", description: e?.message || "Please try again." })
+    }
   }
 
   const filteredCommunities = communities.filter((community) => {
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       if (!community.name.toLowerCase().includes(query) && 
@@ -121,11 +157,8 @@ export default function CommunitiesPage() {
         return false
       }
     }
-
-    // Filter by status
     if (filter === "joined") return community.isJoined
     if (filter === "trending") return community.membersCount > 1000
-
     return true
   })
 
