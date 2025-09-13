@@ -21,10 +21,8 @@ import {
   AlertCircle, 
   X, 
   Calendar,
-  CreditCard,
   Gift,
   TrendingDown,
-  Shield,
   Eye,
   EyeOff,
   Copy,
@@ -34,111 +32,8 @@ import {
   Link as LinkIcon
 } from "lucide-react"
 import { PanelGroup as ResizablePanelGroup, Panel as ResizablePanel, PanelResizeHandle as ResizableHandle } from "react-resizable-panels"
-import type { Subscription, Offer, AgentProposal, Pod } from "@/types"
+import type { Subscription, AgentProposal, Pod } from "@/types"
 import { usePodsLive, useRecurring, useInstitutions, useRoundups, useLinkedCounts } from "@/lib/penny/client"
-
-// Mock data - moved outside component to prevent recreation
-const mockSubscriptions: Subscription[] = [
-  {
-    id: "1",
-    merchant: "Netflix",
-    monthlyCost: 15.99,
-    nextChargeDate: "2024-02-15",
-    status: "active",
-    flags: ["duplicate"],
-  },
-  {
-    id: "2",
-    merchant: "Spotify Premium",
-    monthlyCost: 10.99,
-    nextChargeDate: "2024-02-10",
-    status: "active",
-    flags: [],
-  },
-  {
-    id: "3",
-    merchant: "Telco Plan",
-    monthlyCost: 85.00,
-    nextChargeDate: "2024-02-20",
-    status: "active",
-    flags: ["overpriced"],
-  },
-  {
-    id: "4",
-    merchant: "Gym Membership",
-    monthlyCost: 29.99,
-    nextChargeDate: "2024-02-12",
-    status: "active",
-    flags: ["low-usage"],
-  },
-  {
-    id: "5",
-    merchant: "Dropbox",
-    monthlyCost: 11.99,
-    nextChargeDate: "2024-02-18",
-    status: "active",
-    flags: [],
-  },
-]
-
-const mockOffers: Offer[] = [
-  {
-    id: "1",
-    type: "coupon",
-    label: "10% off Uber Eats",
-    estSavingsLabel: "≈ $5",
-    sourceLabel: "Example",
-    description: "Valid on orders over $25. Use code SAVE10 at checkout.",
-    expiresAt: "2024-02-28",
-  },
-  {
-    id: "2",
-    type: "giftcard",
-    label: "8% off Amazon Gift Card",
-    estSavingsLabel: "≈ $8",
-    sourceLabel: "Example",
-    description: "Buy a $100 gift card for $92. Perfect for future purchases.",
-  },
-  {
-    id: "3",
-    type: "cashback",
-    label: "5% Cashback on Spotify",
-    estSavingsLabel: "≈ $0.55",
-    sourceLabel: "Example",
-    description: "Get cashback on your next Spotify Premium subscription.",
-  },
-  {
-    id: "4",
-    type: "plan",
-    label: "Lower-cost Telco Plan",
-    estSavingsLabel: "≈ $10/mo",
-    sourceLabel: "Example",
-    description: "Switch to a plan with the same coverage for $10 less per month.",
-  },
-]
-
-const mockPods: Pod[] = [
-  {
-  id: "1",
-    name: "Education",
-    targetAmount: 15000,
-    currentAmount: 6300,
-    targetDate: "2025-06-01",
-    isFeatured: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-15T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Travel",
-    targetAmount: 5000,
-    currentAmount: 750,
-    targetDate: "2024-12-15",
-    isFeatured: false,
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-02-15T00:00:00Z",
-  },
-]
 
 interface ChatMessage {
   id: string
@@ -154,7 +49,7 @@ interface ChatMessage {
 export default function AgentPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [agentName, setAgentName] = useState("Penny")
+  const [agentName, setAgentName] = useState("Lonniee")
   const [activeTab, setActiveTab] = useState("subs")
   const [isMobile, setIsMobile] = useState(false)
   const [showUndo, setShowUndo] = useState(false)
@@ -172,7 +67,6 @@ export default function AgentPage() {
   // Form states
   const [newAgentName, setNewAgentName] = useState("")
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null)
   const [selectedPod, setSelectedPod] = useState<Pod | null>(null)
   const [riskLevel, setRiskLevel] = useState("normal")
   const [searchQuery, setSearchQuery] = useState("")
@@ -245,8 +139,7 @@ export default function AgentPage() {
         text: "I found a 10% Uber Eats coupon, 8% off Amazon gift card, Spotify cashback, and a cheaper telco plan.",
         timestamp: now,
         suggestions: [
-          { label: "Show deals", action: "show-deals" },
-          { label: "Redeem Amazon Gift Card", action: "redeem-amazon-gc" },
+          { label: "Ask Lonniee for deals", action: "find-deals" },
         ],
       },
       {
@@ -304,7 +197,7 @@ export default function AgentPage() {
     setMessages((prev: ChatMessage[]) => [...prev, userMessage])
     setIsLoading(true)
 
-    const res = await fetch("/api/penny/chat", {
+    const res = await fetch("/api/lonniee/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ threadId, message }),
@@ -347,10 +240,10 @@ export default function AgentPage() {
   const approvePending = async () => {
     if (!pendingProposal) return
     setIsLoading(true)
-    const res = await fetch("/api/penny/chat", {
+    const res = await fetch("/api/lonniee/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ threadId, approved: true, proposal: { id: pendingProposal.id, tool: pendingProposal.tool, args: pendingProposal.args } }),
+      body: JSON.stringify({ threadId, approval: { proposalId: pendingProposal.id, tool: pendingProposal.tool, args: pendingProposal.args, idempotency_key: pendingProposal.id } }),
     })
     if (res.ok && res.body) {
       const reader = res.body.getReader()
@@ -396,16 +289,32 @@ export default function AgentPage() {
         setActiveTab("subs")
         break
       case "cancel-netflix": {
-        const sub = mockSubscriptions.find(s => s.merchant.toLowerCase().includes("netflix"))
-        if (sub) {
+        const row = (recurringQuery.data?.rows || []).find((r: any) => (r.merchant || "").toLowerCase().includes("netflix"))
+        if (row) {
+          const sub: Subscription = {
+            id: row.id || "",
+            merchant: row.merchant,
+            monthlyCost: (row.monthly_cost_cents || (row.amount_cents ?? 0)) / 100,
+            nextChargeDate: row.next_date || row.next_due_date || "",
+            status: "active",
+            flags: (row.flags || []) as any,
+          }
           handleCancelSubscription(sub)
           setActiveTab("subs")
         }
         break
       }
       case "reschedule-telco": {
-        const sub = mockSubscriptions.find(s => s.merchant.toLowerCase().includes("telco"))
-        if (sub) {
+        const row = (recurringQuery.data?.rows || []).find((r: any) => (r.merchant || "").toLowerCase().includes("telco"))
+        if (row) {
+          const sub: Subscription = {
+            id: row.id || "",
+            merchant: row.merchant,
+            monthlyCost: (row.monthly_cost_cents || (row.amount_cents ?? 0)) / 100,
+            nextChargeDate: row.next_date || row.next_due_date || "",
+            status: "active",
+            flags: (row.flags || []) as any,
+          }
           handleRescheduleSubscription(sub)
           setActiveTab("subs")
         }
@@ -424,14 +333,6 @@ export default function AgentPage() {
       case "show-deals":
         setActiveTab("deals")
         break
-      case "redeem-amazon-gc": {
-        const offer = mockOffers.find(o => o.label.toLowerCase().includes("amazon"))
-        if (offer) {
-          handleRedeemOffer(offer)
-          setActiveTab("deals")
-        }
-        break
-      }
       case "connect-bank":
         window.location.assign('/connect')
         break
@@ -473,11 +374,6 @@ export default function AgentPage() {
       title: "Flagged for review",
       description: "We'll remind you next cycle.",
     })
-  }
-
-  const handleRedeemOffer = (offer: Offer) => {
-    setSelectedOffer(offer)
-    setSinkPodDialogOpen(true)
   }
 
   const handleSafeToSave = (amount: number) => {
@@ -571,14 +467,6 @@ export default function AgentPage() {
     }
   }, [riskLevel])
 
-  const getFilteredOffers = useMemo(() => {
-    if (!searchQuery) return mockOffers
-    return mockOffers.filter(offer => 
-      offer.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (offer.description && offer.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-  }, [searchQuery])
-
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
@@ -646,8 +534,7 @@ export default function AgentPage() {
                 <AssistantConsole
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
-                  subscriptions={mockSubscriptions}
-                  offers={getFilteredOffers}
+                  subscriptions={[]}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   riskLevel={riskLevel}
@@ -656,7 +543,6 @@ export default function AgentPage() {
                   onCancelSubscription={handleCancelSubscription}
                   onRescheduleSubscription={handleRescheduleSubscription}
                   onMarkLowUsage={handleMarkLowUsage}
-                  onRedeemOffer={handleRedeemOffer}
                   onSafeToSave={handleSafeToSave}
                   recurringQuery={recurringQuery}
                   institutionsQuery={institutionsQuery}
@@ -722,7 +608,7 @@ export default function AgentPage() {
         onOpenChange={setTemplateDialogOpen}
         subscription={selectedSubscription}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
+          const pod = (podsQuery.data?.pods || []).find((p: any) => p.id === podId)
           toast({
             title: `Canceled ${selectedSubscription?.merchant}`,
             description: `+$${selectedSubscription?.monthlyCost}/mo planned → ${pod?.name} pod`,
@@ -737,7 +623,7 @@ export default function AgentPage() {
         onOpenChange={setRescheduleDialogOpen}
         subscription={selectedSubscription}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
+          const pod = (podsQuery.data?.pods || []).find((p: any) => p.id === podId)
           toast({
             title: `Rescheduled ${selectedSubscription?.merchant}`,
             description: `avoids $10 fee next month → ${pod?.name} pod`,
@@ -750,16 +636,16 @@ export default function AgentPage() {
       <SinkPodSelectorDialog
         open={sinkPodDialogOpen}
         onOpenChange={setSinkPodDialogOpen}
-        pods={mockPods}
+        pods={(podsQuery.data?.pods || []) as any}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
-          const savings = selectedOffer?.estSavingsLabel?.match(/\$(\d+)/)?.[1] || "5"
+          const pod = (podsQuery.data?.pods || []).find((p: any) => p.id === podId)
+          const savings = "5"
           toast({
-            title: `Redeemed ${selectedOffer?.label}`,
+            title: `Redeemed deal`,
             description: `saved $${savings} → ${pod?.name} pod`,
           })
           setSinkPodDialogOpen(false)
-          handleApplyAction("redeem", { offerName: selectedOffer?.label, savings })
+          handleApplyAction("redeem", { offerName: "deal", savings })
         }}
       />
 
@@ -767,9 +653,9 @@ export default function AgentPage() {
         open={previewDialogOpen}
         onOpenChange={setPreviewDialogOpen}
         amount={getSafeToSaveAmount()}
-        pods={mockPods}
+        pods={(podsQuery.data?.pods || []) as any}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
+          const pod = (podsQuery.data?.pods || []).find((p: any) => p.id === podId)
           toast({
             title: `$${getSafeToSaveAmount()} saved`,
             description: `→ ${pod?.name} pod`,
@@ -976,7 +862,6 @@ interface AssistantConsoleProps {
   activeTab: string
   onTabChange: (tab: string) => void
   subscriptions: Subscription[]
-  offers: Offer[]
   searchQuery: string
   onSearchChange: (query: string) => void
   riskLevel: string
@@ -985,7 +870,6 @@ interface AssistantConsoleProps {
   onCancelSubscription: (subscription: Subscription) => void
   onRescheduleSubscription: (subscription: Subscription) => void
   onMarkLowUsage: (subscriptionId: string) => void
-  onRedeemOffer: (offer: Offer) => void
   onSafeToSave: (amount: number) => void
   recurringQuery: any
   institutionsQuery: any
@@ -995,7 +879,6 @@ function AssistantConsole({
   activeTab,
   onTabChange,
   subscriptions,
-  offers,
   searchQuery,
   onSearchChange,
   riskLevel,
@@ -1004,7 +887,6 @@ function AssistantConsole({
   onCancelSubscription,
   onRescheduleSubscription,
   onMarkLowUsage,
-  onRedeemOffer,
   onSafeToSave,
   recurringQuery,
   institutionsQuery,
@@ -1060,18 +942,8 @@ function AssistantConsole({
             <h3 className="font-semibold">Deals</h3>
             <Badge variant="outline">{institutionsQuery.data?.items?.length ?? 0} connections</Badge>
                 </div>
-          <Input
-            placeholder="What are you buying?"
-            value={searchQuery}
-            onChange={(e: any) => onSearchChange((e?.target?.value as string) || "")}
-          />
-          <div className="space-y-3">
-            {offers.map((offer) => (
-              <DealCard key={offer.id} offer={offer} onRedeem={onRedeemOffer} />
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Offers shown are examples; availability may vary.
+          <p className="text-sm text-muted-foreground">
+            Ask Lonniee for coupons, discounted gift cards, cashbacks, or cheaper plans. I’ll propose conservative savings to record once you redeem.
           </p>
               </TabsContent>
             </div>
@@ -1218,50 +1090,6 @@ function SafeToSaveCard({ amount, riskLevel, onRiskChange, onSafeToSave }: SafeT
             <Switch id="auto-pause" />
             <Label htmlFor="auto-pause" className="text-xs">Auto-pause on tight weeks</Label>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-// Deal Card Component
-interface DealCardProps {
-  offer: Offer
-  onRedeem: (offer: Offer) => void
-}
-
-function DealCard({ offer, onRedeem }: DealCardProps) {
-  const getTypeIcon = () => {
-    switch (offer.type) {
-      case "coupon": return <CreditCard className="h-4 w-4" />
-      case "giftcard": return <Gift className="h-4 w-4" />
-      case "cashback": return <TrendingDown className="h-4 w-4" />
-      case "plan": return <Shield className="h-4 w-4" />
-      default: return <Gift className="h-4 w-4" />
-    }
-  }
-
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {getTypeIcon()}
-            <Badge variant="outline" className="text-xs">
-              {offer.type === "giftcard" ? "Gift Card" : offer.type}
-            </Badge>
-          </div>
-          <Badge variant="secondary" className="text-xs">
-            {offer.estSavingsLabel}
-          </Badge>
-        </div>
-        <h4 className="font-medium mb-1">{offer.label}</h4>
-        <p className="text-sm text-muted-foreground mb-3">{offer.description}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{offer.sourceLabel}</span>
-          <Button size="sm" onClick={() => onRedeem(offer)}>
-            Redeem
-          </Button>
         </div>
       </CardContent>
     </Card>
