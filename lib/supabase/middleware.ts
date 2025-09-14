@@ -2,12 +2,15 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
-  console.log(`[Supabase Middleware] Cookies for ${request.nextUrl.pathname}:`, request.cookies.getAll().map(c => `${c.name}=${c.value.substring(0, 20)}...`))
-  console.log(`[Supabase Middleware] Environment check:`, {
-    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...'
-  })
+  const isProd = process.env.NODE_ENV === 'production'
+  if (!isProd) {
+    console.log(`[Supabase Middleware] Cookies for ${request.nextUrl.pathname}:`, request.cookies.getAll().map(c => `${c.name}=${c.value.substring(0, 20)}...`))
+    console.log(`[Supabase Middleware] Environment check:`, {
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...'
+    })
+  }
   
   let supabaseResponse = NextResponse.next({
     request,
@@ -44,7 +47,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log(`[Supabase Middleware] User check for ${request.nextUrl.pathname}:`, user ? 'authenticated' : 'not authenticated')
+  if (!isProd) console.log(`[Supabase Middleware] User check for ${request.nextUrl.pathname}:`, user ? 'authenticated' : 'not authenticated')
 
   // Define protected routes
   const protectedRoutes = [
@@ -65,17 +68,17 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + "/")
   )
 
-  console.log(`[Supabase Middleware] Route ${request.nextUrl.pathname} is protected:`, isProtectedRoute)
+  if (!isProd) console.log(`[Supabase Middleware] Route ${request.nextUrl.pathname} is protected:`, isProtectedRoute)
 
   if (!user && isProtectedRoute) {
-    console.log(`[Supabase Middleware] Redirecting to login for protected route: ${request.nextUrl.pathname}`)
+    if (!isProd) console.log(`[Supabase Middleware] Redirecting to login for protected route: ${request.nextUrl.pathname}`)
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
     url.searchParams.set("redirect", request.nextUrl.pathname)
     return NextResponse.redirect(url)
   } else if (user && isProtectedRoute) {
-    console.log(`[Supabase Middleware] User authenticated, allowing access to: ${request.nextUrl.pathname}`)
+    if (!isProd) console.log(`[Supabase Middleware] User authenticated, allowing access to: ${request.nextUrl.pathname}`)
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

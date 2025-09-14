@@ -37,7 +37,7 @@ import { useToast } from "@/hooks/use-toast"
 const navigation = [
   { name: "Pods", href: "/pods", icon: Target },
   { name: "Challenges", href: "/challenges", icon: Zap },
-  { name: "Agent", href: "/agent", icon: Bot },
+  { name: "Lonniee", href: "/agent", icon: Bot },
   { name: "Feed", href: "/feed", icon: Users },
   { name: "Communities", href: "/communities", icon: Users },
 ]

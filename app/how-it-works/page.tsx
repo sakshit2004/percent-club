@@ -113,7 +113,7 @@ export default function HowItWorksPage() {
       {/* Step 2 */}
       <section id="step-challenge-agent" className="container mx-auto px-4 py-16 scroll-mt-24">
         <motion.h2 {...fadeIn} className="text-2xl md:text-3xl font-bold mb-6">
-          2) Enable a Challenge & Name your Agent
+          2) Enable a Challenge & Name Lonniee
         </motion.h2>
         <div className="grid md:grid-cols-2 gap-6">
           <motion.div {...fadeIn}>
@@ -140,11 +140,11 @@ export default function HowItWorksPage() {
                 <CardDescription>Personalize your assistant</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-sm text-muted-foreground mb-3">Give your AI Agent a name (e.g., “Penny”).</div>
+                <div className="text-sm text-muted-foreground mb-3">Give your AI assistant a name (e.g., “Lonniee”).</div>
                 <div className="flex gap-2">
                   <input
-                    aria-label="Agent name"
-                    placeholder="Penny"
+                    aria-label="Assistant name"
+                    placeholder="Lonniee"
                     className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
                   />
                   <Button variant="secondary">Save</Button>

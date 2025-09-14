@@ -31,7 +31,7 @@ Continue building your app on:
 <<<<<<< Current (Your changes)
 =======
 
-## Penny – AI Savings Assistant
+## Lonniee – AI Savings Assistant
 
 Setup
 - Copy `.env.example` to `.env.local` and fill values for OpenAI, Supabase, Plaid MCP, and APP_BASE_URL.
@@ -39,15 +39,15 @@ Setup
 - Run dev server: `pnpm dev`.
 
 Server components
-- System prompt: `lib/penny/prompt.ts`
-- Tool wrappers and OpenAI tool schemas: `lib/penny/tools.ts`
-- Chat SSE endpoint: `app/api/penny/chat/route.ts`
+- System prompt: `lib/ai/system-prompts.ts`
+- Tool wrappers and OpenAI tool schemas: `lib/lonniee/tools.ts`
+- Chat SSE endpoint: `app/api/lonniee/chat/route.ts`
 - DB tables: `scripts/penny_chat.sql`
 
 Client components
 - Agent chat with streaming + approvals: `app/agent/page.tsx`
 
 Notes
-- Approval-required actions are proposed via `actionPreview` SSE events; UI posts approval back to `/api/penny/chat`.
+- Approval-required actions are proposed via `actionPreview` SSE events; UI posts approval back to `/api/lonniee/chat`.
 - Tools call real APIs: OpenAI, your app routes, and Plaid MCP sandbox.
 >>>>>>> Incoming (Background Agent changes)

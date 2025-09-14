@@ -2,7 +2,9 @@ import { updateSession } from "@/lib/supabase/middleware"
 import { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
-  console.log('🚀 MIDDLEWARE EXECUTED for:', request.nextUrl.pathname)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🚀 MIDDLEWARE EXECUTED for:', request.nextUrl.pathname)
+  }
   return await updateSession(request)
 }
 

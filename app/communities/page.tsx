@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { Search, Users, TrendingUp, Filter, Plus } from "lucide-react"
-import type { Community, LeaderboardEntry } from "@/types"
+import type { Community } from "@/types"
 import { 
   listCommunities, 
   getMyJoinedCommunityIds, 
@@ -18,11 +18,7 @@ import {
   subscribeRealtime 
 } from "@/lib/social"
 
-const mockTopMembers: LeaderboardEntry[] = [
-  { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
-  { rank: 2, handle: "budgetboss", alias: "Mike Rodriguez", progress: 45, streak: 8 },
-  { rank: 3, handle: "goaldigger", alias: "Emma Thompson", progress: 42, streak: 15 },
-]
+const emptyTopMembers: { alias: string; handle: string; progress: number }[] = []
 
 export default function CommunitiesPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -242,7 +238,7 @@ export default function CommunitiesPage() {
                 community={community}
                 onJoin={handleJoin}
                 onLeave={handleLeave}
-                topMembers={mockTopMembers}
+                topMembers={emptyTopMembers}
               />
             ))}
           </div>

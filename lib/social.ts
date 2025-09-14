@@ -483,6 +483,11 @@ export function subscribeRealtime(
   }>,
 ) {
   const client = sb()
+  // Avoid opening many realtime channels in background when tab hidden
+  const isHidden = typeof document !== "undefined" && document.hidden
+  if (isHidden) {
+    return () => {}
+  }
   const channels: any[] = []
 
   function sub(table: string, cb?: (payload: any) => void) {

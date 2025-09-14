@@ -91,6 +91,17 @@ export async function getPods(): Promise<PodsRes> {
   return Array.isArray(res) ? { pods: res } : (res as PodsRes)
 }
 
+export async function getPod(id: string): Promise<{
+  id: string
+  name: string
+  targetAmount: number
+  currentAmount: number
+  targetDate: string
+  isFeatured: boolean
+}> {
+  return apiFetch(`/api/pods/${encodeURIComponent(id)}`)
+}
+
 // React Query hooks for Pods page
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -99,6 +110,14 @@ export function usePods(options?: { enabled?: boolean }) {
     queryKey: ["pods"],
     queryFn: async () => (await getPods()).pods ?? ([] as any),
     ...(options || {}),
+  })
+}
+
+export function usePod(id: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["pod", id],
+    queryFn: () => getPod(id),
+    enabled: !!id && (options?.enabled ?? true),
   })
 }
 

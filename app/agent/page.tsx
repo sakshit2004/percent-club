@@ -37,108 +37,7 @@ import { PanelGroup as ResizablePanelGroup, Panel as ResizablePanel, PanelResize
 import type { Subscription, Offer, AgentProposal, Pod } from "@/types"
 import { usePodsLive, useRecurring, useInstitutions, useRoundups, useLinkedCounts } from "@/lib/penny/client"
 
-// Mock data - moved outside component to prevent recreation
-const mockSubscriptions: Subscription[] = [
-  {
-    id: "1",
-    merchant: "Netflix",
-    monthlyCost: 15.99,
-    nextChargeDate: "2024-02-15",
-    status: "active",
-    flags: ["duplicate"],
-  },
-  {
-    id: "2",
-    merchant: "Spotify Premium",
-    monthlyCost: 10.99,
-    nextChargeDate: "2024-02-10",
-    status: "active",
-    flags: [],
-  },
-  {
-    id: "3",
-    merchant: "Telco Plan",
-    monthlyCost: 85.00,
-    nextChargeDate: "2024-02-20",
-    status: "active",
-    flags: ["overpriced"],
-  },
-  {
-    id: "4",
-    merchant: "Gym Membership",
-    monthlyCost: 29.99,
-    nextChargeDate: "2024-02-12",
-    status: "active",
-    flags: ["low-usage"],
-  },
-  {
-    id: "5",
-    merchant: "Dropbox",
-    monthlyCost: 11.99,
-    nextChargeDate: "2024-02-18",
-    status: "active",
-    flags: [],
-  },
-]
-
-const mockOffers: Offer[] = [
-  {
-    id: "1",
-    type: "coupon",
-    label: "10% off Uber Eats",
-    estSavingsLabel: "≈ $5",
-    sourceLabel: "Example",
-    description: "Valid on orders over $25. Use code SAVE10 at checkout.",
-    expiresAt: "2024-02-28",
-  },
-  {
-    id: "2",
-    type: "giftcard",
-    label: "8% off Amazon Gift Card",
-    estSavingsLabel: "≈ $8",
-    sourceLabel: "Example",
-    description: "Buy a $100 gift card for $92. Perfect for future purchases.",
-  },
-  {
-    id: "3",
-    type: "cashback",
-    label: "5% Cashback on Spotify",
-    estSavingsLabel: "≈ $0.55",
-    sourceLabel: "Example",
-    description: "Get cashback on your next Spotify Premium subscription.",
-  },
-  {
-    id: "4",
-    type: "plan",
-    label: "Lower-cost Telco Plan",
-    estSavingsLabel: "≈ $10/mo",
-    sourceLabel: "Example",
-    description: "Switch to a plan with the same coverage for $10 less per month.",
-  },
-]
-
-const mockPods: Pod[] = [
-  {
-  id: "1",
-    name: "Education",
-    targetAmount: 15000,
-    currentAmount: 6300,
-    targetDate: "2025-06-01",
-    isFeatured: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-15T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Travel",
-    targetAmount: 5000,
-    currentAmount: 750,
-    targetDate: "2024-12-15",
-    isFeatured: false,
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-02-15T00:00:00Z",
-  },
-]
+// All mock arrays removed. Live data is loaded via React Query hooks.
 
 interface ChatMessage {
   id: string
@@ -154,7 +53,7 @@ interface ChatMessage {
 export default function AgentPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [agentName, setAgentName] = useState("Penny")
+  const [agentName, setAgentName] = useState("Lonniee")
   const [activeTab, setActiveTab] = useState("subs")
   const [isMobile, setIsMobile] = useState(false)
   const [showUndo, setShowUndo] = useState(false)
@@ -304,7 +203,7 @@ export default function AgentPage() {
     setMessages((prev: ChatMessage[]) => [...prev, userMessage])
     setIsLoading(true)
 
-    const res = await fetch("/api/penny/chat", {
+    const res = await fetch("/api/lonniee/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ threadId, message }),
@@ -347,10 +246,10 @@ export default function AgentPage() {
   const approvePending = async () => {
     if (!pendingProposal) return
     setIsLoading(true)
-    const res = await fetch("/api/penny/chat", {
+    const res = await fetch("/api/lonniee/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ threadId, approved: true, proposal: { id: pendingProposal.id, tool: pendingProposal.tool, args: pendingProposal.args } }),
+      body: JSON.stringify({ threadId, approval: { proposalId: pendingProposal.id, tool: pendingProposal.tool, args: pendingProposal.args, idempotency_key: (globalThis.crypto?.randomUUID?.() || (`${pendingProposal.id}-${Date.now()}`)) } }),
     })
     if (res.ok && res.body) {
       const reader = res.body.getReader()
@@ -395,22 +294,14 @@ export default function AgentPage() {
       case "show-subscriptions":
         setActiveTab("subs")
         break
-      case "cancel-netflix": {
-        const sub = mockSubscriptions.find(s => s.merchant.toLowerCase().includes("netflix"))
-        if (sub) {
-          handleCancelSubscription(sub)
-          setActiveTab("subs")
-        }
+      case "cancel-netflix":
+        handleSendMessage("Propose canceling Netflix and log expected savings to my preferred pod.")
+        setActiveTab("subs")
         break
-      }
-      case "reschedule-telco": {
-        const sub = mockSubscriptions.find(s => s.merchant.toLowerCase().includes("telco"))
-        if (sub) {
-          handleRescheduleSubscription(sub)
-          setActiveTab("subs")
-        }
+      case "reschedule-telco":
+        handleSendMessage("Propose rescheduling my telco plan to payday and log the expected fee savings.")
+        setActiveTab("subs")
         break
-      }
       case "preview-save": {
         setActiveTab("save")
         setPreviewDialogOpen(true)
@@ -424,14 +315,10 @@ export default function AgentPage() {
       case "show-deals":
         setActiveTab("deals")
         break
-      case "redeem-amazon-gc": {
-        const offer = mockOffers.find(o => o.label.toLowerCase().includes("amazon"))
-        if (offer) {
-          handleRedeemOffer(offer)
-          setActiveTab("deals")
-        }
+      case "redeem-amazon-gc":
+        handleSendMessage("Find me an Amazon gift card deal and record the savings to a pod.")
+        setActiveTab("deals")
         break
-      }
       case "connect-bank":
         window.location.assign('/connect')
         break
@@ -459,13 +346,11 @@ export default function AgentPage() {
   }
 
   const handleCancelSubscription = (subscription: Subscription) => {
-    setSelectedSubscription(subscription)
-    setTemplateDialogOpen(true)
+    handleSendMessage(`Propose canceling ${subscription.merchant} and prepare a preview to record expected monthly savings.`)
   }
 
   const handleRescheduleSubscription = (subscription: Subscription) => {
-    setSelectedSubscription(subscription)
-    setRescheduleDialogOpen(true)
+    handleSendMessage(`Propose rescheduling ${subscription.merchant} to reduce fees, with a preview to record expected savings.`)
   }
 
   const handleMarkLowUsage = (subscriptionId: string) => {
@@ -572,11 +457,7 @@ export default function AgentPage() {
   }, [riskLevel])
 
   const getFilteredOffers = useMemo(() => {
-    if (!searchQuery) return mockOffers
-    return mockOffers.filter(offer => 
-      offer.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (offer.description && offer.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
+    return [] as Offer[]
   }, [searchQuery])
 
   return (
@@ -591,6 +472,7 @@ export default function AgentPage() {
             <div>
               <h1 className="font-semibold">{agentName}</h1>
               <p className="text-sm text-muted-foreground">AI Savings Assistant</p>
+              <p className="text-[10px] text-muted-foreground">Read-only connection. We never move money. Disconnect anytime.</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -646,7 +528,7 @@ export default function AgentPage() {
                 <AssistantConsole
                   activeTab={activeTab}
                   onTabChange={setActiveTab}
-                  subscriptions={mockSubscriptions}
+                  subscriptions={[]}
                   offers={getFilteredOffers}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
@@ -717,15 +599,15 @@ export default function AgentPage() {
         onRename={handleRenameAgent}
       />
 
+      {/* Legacy dialogs kept for now but not used; actions route through chat with approvals */}
       <TemplatePreviewDialog
         open={templateDialogOpen}
         onOpenChange={setTemplateDialogOpen}
         subscription={selectedSubscription}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
           toast({
             title: `Canceled ${selectedSubscription?.merchant}`,
-            description: `+$${selectedSubscription?.monthlyCost}/mo planned → ${pod?.name} pod`,
+            description: `Planned savings will be recorded after approval.`,
           })
           setTemplateDialogOpen(false)
           handleApplyAction("cancel", selectedSubscription)
@@ -737,10 +619,9 @@ export default function AgentPage() {
         onOpenChange={setRescheduleDialogOpen}
         subscription={selectedSubscription}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
           toast({
             title: `Rescheduled ${selectedSubscription?.merchant}`,
-            description: `avoids $10 fee next month → ${pod?.name} pod`,
+            description: `Preview prepared — finalize via approval.`,
           })
           setRescheduleDialogOpen(false)
           handleApplyAction("reschedule", selectedSubscription)
@@ -750,16 +631,14 @@ export default function AgentPage() {
       <SinkPodSelectorDialog
         open={sinkPodDialogOpen}
         onOpenChange={setSinkPodDialogOpen}
-        pods={mockPods}
+        pods={[]}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
-          const savings = selectedOffer?.estSavingsLabel?.match(/\$(\d+)/)?.[1] || "5"
           toast({
             title: `Redeemed ${selectedOffer?.label}`,
-            description: `saved $${savings} → ${pod?.name} pod`,
+            description: `Logged after approval.`,
           })
           setSinkPodDialogOpen(false)
-          handleApplyAction("redeem", { offerName: selectedOffer?.label, savings })
+          handleApplyAction("redeem", { offerName: selectedOffer?.label })
         }}
       />
 
@@ -767,15 +646,14 @@ export default function AgentPage() {
         open={previewDialogOpen}
         onOpenChange={setPreviewDialogOpen}
         amount={getSafeToSaveAmount()}
-        pods={mockPods}
+        pods={[]}
         onConfirm={(podId) => {
-          const pod = mockPods.find(p => p.id === podId)
           toast({
             title: `$${getSafeToSaveAmount()} saved`,
-            description: `→ ${pod?.name} pod`,
+            description: `Will be logged after approval.`,
           })
           setPreviewDialogOpen(false)
-          handleApplyAction("save", { amount: getSafeToSaveAmount(), podName: pod?.name })
+          handleApplyAction("save", { amount: getSafeToSaveAmount() })
         }}
       />
     </div>

@@ -15,7 +15,7 @@ import { PerformanceMonitor } from "@/components/common/performance-monitor"
 
 export const metadata: Metadata = {
   title: "percentclub",
-  description: "percentclub — save smarter with Pods, Challenges, and your AI Agent",
+  description: "percentclub — save smarter with Pods, Challenges, and Lonniee",
   generator: "v0.app",
 }
 

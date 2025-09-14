@@ -31,9 +31,14 @@ import {
   Heart,
   Share2
 } from "lucide-react"
-import type { Community, Pod, LeaderboardEntry } from "@/types"
+import type { Community, Pod } from "@/types"
 import {
   getHomeFeedFull,
+  listCommunities,
+  getMyJoinedCommunityIds,
+  getCommunityMemberCounts,
+  joinCommunity,
+  leaveCommunity,
   createPost as createSocialPost,
   likePost,
   unlikePost,
@@ -45,6 +50,7 @@ import {
   type CommentWithAuthor,
 } from "@/lib/social"
 import { createClient } from "@/lib/supabase/client"
+import { usePods } from "@/lib/api"
 
 type UIPost = {
   id: string
@@ -59,63 +65,7 @@ type UIPost = {
   createdAt: string
 }
 
-const mockCommunities: Community[] = [
-  {
-    id: "1",
-    name: "Education Savers",
-    description: "From textbooks to tuition — % at a time",
-    membersCount: 1234,
-    isJoined: true,
-    avatar: "/emergency-fund-icon.png",
-  },
-  {
-    id: "2",
-    name: "52-Week Challengers",
-    description: "Steady, increasing weekly saves",
-    membersCount: 567,
-    isJoined: false,
-    avatar: "/challenge-icon.jpg",
-  },
-  {
-    id: "3",
-    name: "Round-Up Ninjas",
-    description: "Pennies to progress",
-    membersCount: 892,
-    isJoined: true,
-    avatar: "/vacation-icon.png",
-  },
-]
-
-const mockPods: Pod[] = [
-  {
-    id: "1",
-    name: "Education",
-    targetAmount: 15000,
-    currentAmount: 6300,
-    targetDate: "2025-06-01",
-    isFeatured: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-15T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Travel",
-    targetAmount: 5000,
-    currentAmount: 750,
-    targetDate: "2024-12-15",
-    isFeatured: false,
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-02-15T00:00:00Z",
-  },
-]
-
-const mockLeaderboard: LeaderboardEntry[] = [
-  { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
-  { rank: 2, handle: "budgetboss", alias: "Mike Rodriguez", progress: 45, streak: 8 },
-  { rank: 3, handle: "goaldigger", alias: "Emma Thompson", progress: 42, streak: 15 },
-  { rank: 4, handle: "frugalfriend", alias: "Alex Kim", progress: 85, streak: 6 },
-  { rank: 5, handle: "cashbackqueen", alias: "Lisa Park", progress: 38, streak: 9 },
-]
+type SuggestedCommunity = Community
 
 type Me = { avatar?: string; alias: string; handle: string }
 
@@ -131,6 +81,8 @@ export default function FeedPage() {
   const [commentsOpen, setCommentsOpen] = useState<string | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
+  const { data: podsData } = usePods()
+  const [suggestedCommunities, setSuggestedCommunities] = useState<SuggestedCommunity[]>([])
 
   // Map FeedItem -> UIPost
   const toUIPost = useCallback((item: FeedItem): UIPost => ({
@@ -186,6 +138,40 @@ export default function FeedPage() {
     })()
     return () => { cancelled = true }
   }, [toUIPost])
+
+  // Load community suggestions (top by membersCount)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const base = await listCommunities(50)
+        const joined = await getMyJoinedCommunityIds()
+        const counts = await getCommunityMemberCounts(base.map((c: any) => c.id))
+        if (cancelled) return
+        const mapped: SuggestedCommunity[] = base
+          .map((c: any) => ({
+            id: c.id,
+            name: c.title,
+            description: c.description || "",
+            membersCount: counts[c.id] ?? 0,
+            isJoined: joined.has(c.id),
+            avatar: c.cover_url || "/placeholder.svg",
+          }))
+          .sort((a, b) => (b.membersCount - a.membersCount))
+        setSuggestedCommunities(mapped)
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const handleJoinCommunity = async (communityId: string) => {
+    setSuggestedCommunities(prev => prev.map(c => c.id === communityId ? { ...c, isJoined: true } : c))
+    try { await joinCommunity(communityId) } catch {}
+  }
+  const handleLeaveCommunity = async (communityId: string) => {
+    setSuggestedCommunities(prev => prev.map(c => c.id === communityId ? { ...c, isJoined: false } : c))
+    try { await leaveCommunity(communityId) } catch {}
+  }
 
   // Presence heartbeat
   useEffect(() => {
@@ -457,8 +443,8 @@ export default function FeedPage() {
             userAlias={me?.alias || "You"}
             onPost={handlePost}
             isLoading={isLoading}
-            communities={[]}
-            pods={mockPods}
+            communities={suggestedCommunities.filter(c => c.isJoined)}
+            pods={(podsData as unknown as Pod[]) || []}
           />
 
           {/* New posts banner */}
@@ -508,81 +494,34 @@ export default function FeedPage() {
         {!isMobile && (
           <div className="w-80 space-y-6">
             {/* Suggested Communities */}
-            <Card className="rounded-2xl">
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-4">Suggested Communities</h3>
-                <div className="space-y-3">
-                  {mockCommunities.slice(0, 3).map((community) => (
-                    <div key={community.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={community.avatar} />
-                          <AvatarFallback>{community.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">{community.name}</p>
-                          <p className="text-xs text-muted-foreground">{community.membersCount} members</p>
+            {suggestedCommunities.length > 0 && (
+              <Card className="rounded-2xl">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">Suggested Communities</h3>
+                  <div className="space-y-3">
+                    {suggestedCommunities.slice(0, 3).map((community) => (
+                      <div key={community.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={community.avatar} />
+                            <AvatarFallback>{community.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">{community.name}</p>
+                            <p className="text-xs text-muted-foreground">{community.membersCount} members</p>
+                          </div>
                         </div>
+                        {community.isJoined ? (
+                          <Button size="sm" variant="outline" onClick={() => handleLeaveCommunity(community.id)}>Joined</Button>
+                        ) : (
+                          <Button size="sm" onClick={() => handleJoinCommunity(community.id)}>Join</Button>
+                        )}
                       </div>
-                      <Button size="sm" variant={community.isJoined ? "outline" : "default"}>
-                        {community.isJoined ? "Joined" : "Join"}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Leaderboard */}
-            <Card className="rounded-2xl">
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-4">Leaderboard (this week)</h3>
-                <div className="space-y-3">
-                  {mockLeaderboard.slice(0, 5).map((entry) => (
-                    <div key={entry.rank} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
-                          {entry.rank}
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{entry.alias}</p>
-                          <p className="text-xs text-muted-foreground">@{entry.handle}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-sm">{entry.progress}%</p>
-                        <p className="text-xs text-muted-foreground">normalized by %</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* People to Follow */}
-            <Card className="rounded-2xl">
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-4">People to Follow</h3>
-                <div className="space-y-3">
-                  {mockLeaderboard.slice(0, 3).map((entry) => (
-                    <div key={entry.handle} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{entry.alias[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">{entry.alias}</p>
-                          <p className="text-xs text-muted-foreground">@{entry.handle}</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        <UserPlus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
