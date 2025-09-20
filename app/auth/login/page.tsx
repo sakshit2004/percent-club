@@ -31,12 +31,22 @@ export default function Page() {
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/pods`,
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/connect`,
         },
       })
       if (error) throw error
+      
+      // Get redirect URL from search params or default to connect page
       const redirect = searchParams?.get("redirect")
-      router.push(redirect || "/connect")
+      const redirectUrl = redirect && redirect !== "/auth/login" && redirect !== "/auth/sign-up" 
+        ? redirect 
+        : "/connect"
+      
+      // Small delay to ensure auth state is updated
+      setTimeout(() => {
+        router.push(redirectUrl)
+        router.refresh()
+      }, 100)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

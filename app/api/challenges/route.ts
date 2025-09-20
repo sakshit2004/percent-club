@@ -17,7 +17,7 @@ const DEFINITIONS: ChallengeDef[] = [
     description: "Round purchases to the next dollar and save the difference.",
     subtitle: "Automatically skim your card spends",
     icon: "coins",
-    expectedImpact: "$10–30 / 30d",
+    expectedImpact: "Low impact",
   },
   {
     id: "weekly-auto",
@@ -25,7 +25,7 @@ const DEFINITIONS: ChallengeDef[] = [
     description: "Save a fixed amount every week.",
     subtitle: "Set and forget",
     icon: "calendar",
-    expectedImpact: "$20–200 / mo",
+    expectedImpact: "Medium impact",
   },
   {
     id: "52-week",
@@ -33,7 +33,7 @@ const DEFINITIONS: ChallengeDef[] = [
     description: "Increase your savings each week for 52 weeks.",
     subtitle: "Classic ramp-up plan",
     icon: "trophy",
-    expectedImpact: "$1.3k / year",
+    expectedImpact: "High impact",
   },
   {
     id: "cashback",
@@ -41,7 +41,7 @@ const DEFINITIONS: ChallengeDef[] = [
     description: "Capture merchant offers and log them as saved.",
     subtitle: "Turn deals into savings",
     icon: "credit-card",
-    expectedImpact: "$5–50 / mo",
+    expectedImpact: "Variable impact",
   },
 ]
 

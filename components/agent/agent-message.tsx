@@ -3,8 +3,9 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Bot, User } from "lucide-react"
+import { User } from "lucide-react"
 import { formatRelativeTime } from "@/lib/format"
+import Image from "next/image"
 
 interface AgentMessageProps {
   role: "user" | "agent"
@@ -24,7 +25,7 @@ export function AgentMessage({ role, text, timestamp, suggestions, onSuggestionC
     <div className={`flex gap-3 ${isAgent ? "" : "flex-row-reverse"}`}>
       <Avatar className="h-8 w-8 mt-1">
         <AvatarFallback className={isAgent ? "bg-primary text-primary-foreground" : "bg-muted"}>
-          {isAgent ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+          {isAgent ? <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={16} height={16} className="w-4 h-4 object-contain" /> : <User className="h-4 w-4" />}
         </AvatarFallback>
       </Avatar>
 

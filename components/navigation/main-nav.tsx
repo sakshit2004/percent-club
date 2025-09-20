@@ -42,16 +42,16 @@ const navigation = [
   { name: "Communities", href: "/communities", icon: Users },
 ]
 
-// Mock user data
+// Empty user data - will be populated from API
 const mockUser = {
-  alias: "Saver Ava",
-  handle: "saver_ava",
-  avatar: "/diverse-user-avatars.png",
-  level: 3,
-  followersCount: 128,
-  followingCount: 76,
-  savedPostsCount: 4,
-  joinedCommunitiesCount: 3,
+  alias: "User",
+  handle: "user",
+  avatar: "/placeholder-user.jpg",
+  level: 1,
+  followersCount: 0,
+  followingCount: 0,
+  savedPostsCount: 0,
+  joinedCommunitiesCount: 0,
 }
 
 export function MainNav() {
@@ -284,7 +284,7 @@ export function MainNav() {
                       <span>My Pods</span>
                     </Link>
                     <Link href="/agent" className="flex items-center gap-3 px-4 py-2 hover:bg-muted" onClick={() => setShowDesktopMenu(false)}>
-                      <Bot className="h-4 w-4" />
+                      <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={16} height={16} className="w-4 h-4 object-contain" />
                       <span>My Agent</span>
                     </Link>
                   </div>
@@ -434,7 +434,7 @@ export function MainNav() {
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild>
                 <Link href="/agent" onClick={() => setShowMobileMenu(false)}>
-                  <Bot className="h-4 w-4 mr-3" />
+                  <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={16} height={16} className="w-4 h-4 object-contain mr-3" />
                   My Agent
                 </Link>
               </Button>

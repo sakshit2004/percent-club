@@ -21,57 +21,8 @@ import {
 } from "lucide-react"
 import type { Post } from "@/types"
 
-// Mock saved posts data
-const mockSavedPosts: Post[] = [
-  {
-    id: "1",
-    authorHandle: "savingsstar",
-    authorAlias: "Sarah Chen",
-    authorAvatar: "/diverse-woman-avatar.png",
-    content: "Just hit 68% on my emergency fund goal! The round-up challenge has been a game changer. Small amounts really do add up over time.",
-    tags: ["#roundups", "#milestone", "#emergency-fund"],
-    visibility: "public",
-    reactions: 12,
-    hasReacted: false,
-    createdAt: "2024-01-15T14:30:00Z",
-  },
-  {
-    id: "2",
-    authorHandle: "budgetboss",
-    authorAlias: "Mike Rodriguez",
-    authorAvatar: "/man-avatar.png",
-    content: "Pro tip: Set up your challenges to feed different pods based on priority. My round-ups go to emergency fund, weekly auto-save goes to vacation fund!",
-    tags: ["#tips", "#strategy", "#challenges"],
-    visibility: "public",
-    reactions: 8,
-    hasReacted: true,
-    createdAt: "2024-01-14T09:15:00Z",
-  },
-  {
-    id: "3",
-    authorHandle: "goaldigger",
-    authorAlias: "Emma Thompson",
-    authorAvatar: "/woman-avatar-2.png",
-    content: "Week 15 of the 52-week challenge complete! Already saved $120 and it's getting easier each week. Who else is doing this challenge?",
-    tags: ["#52week", "#challenge", "#progress"],
-    visibility: "public",
-    reactions: 15,
-    hasReacted: false,
-    createdAt: "2024-01-13T16:20:00Z",
-  },
-  {
-    id: "4",
-    authorHandle: "frugalfriend",
-    authorAlias: "Alex Kim",
-    authorAvatar: "/diverse-person-avatars.png",
-    content: "My AI agent found me $45 in subscription savings this month! Cancelled two services I forgot about and switched to a cheaper phone plan.",
-    tags: ["#ai-agent", "#subscriptions", "#savings"],
-    visibility: "public",
-    reactions: 22,
-    hasReacted: true,
-    createdAt: "2024-01-12T11:45:00Z",
-  },
-]
+// Empty saved posts - will be populated from API
+const mockSavedPosts: Post[] = []
 
 export default function SavedPostsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -273,7 +224,7 @@ function SavedPostCard({
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{post.authorAlias}</span>
-                <Badge variant="outline" className="text-xs">L3</Badge>
+                <Badge variant="outline" className="text-xs">L1</Badge>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>@{post.authorHandle}</span>
@@ -330,7 +281,7 @@ function SavedPostCard({
             </Button>
             <Button variant="ghost" size="sm">
               <MessageCircle className="h-4 w-4 mr-2" />
-              3
+              0
             </Button>
           </div>
           <Button variant="ghost" size="sm">

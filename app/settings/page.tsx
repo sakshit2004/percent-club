@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { Settings, User, Bell, Bot, Shield, Trash2 } from "lucide-react"
+import { Settings, User, Bell, Shield, Trash2 } from "lucide-react"
+import Image from "next/image"
 
 interface SettingsData {
   profile: {
@@ -41,9 +42,9 @@ interface SettingsData {
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsData>({
     profile: {
-      alias: "Sarah Chen",
-      handle: "savingsstar",
-      email: "sarah@example.com",
+      alias: "User",
+      handle: "user",
+      email: "user@example.com",
     },
     privacy: {
       profileVisibility: "public",
@@ -289,7 +290,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
+              <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={20} height={20} className="w-5 h-5 object-contain" />
               AI Agent ({settings.agent.name})
             </CardTitle>
           </CardHeader>

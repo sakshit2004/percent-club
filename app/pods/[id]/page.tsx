@@ -18,63 +18,12 @@ import { ArrowLeft, Settings, Plus, Star } from "lucide-react"
 import Link from "next/link"
 import type { Inflow, Event, Challenge } from "@/types"
 
-// Mock data
-const mockInflows: Inflow[] = [
-  { type: "roundups", amountLabel: "$12.50", lastContribution: "2024-01-15" },
-  { type: "autosave", amountLabel: "$50.00", lastContribution: "2024-01-14" },
-]
+// Empty inflows data - will be populated from API
+const mockInflows: Inflow[] = []
 
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    podId: "1",
-    date: "2024-01-15T10:30:00Z",
-    amountLabel: "$12.50",
-    sourceDetail: "Round-up from Coffee Shop",
-    type: "challenge",
-  },
-  {
-    id: "2",
-    podId: "1",
-    date: "2024-01-14T09:00:00Z",
-    amountLabel: "$50.00",
-    sourceDetail: "Weekly Auto-Save",
-    type: "challenge",
-  },
-  {
-    id: "3",
-    podId: "1",
-    date: "2024-01-10T15:45:00Z",
-    amountLabel: "$100.00",
-    sourceDetail: "Manual Deposit",
-    type: "deposit",
-  },
-]
+const mockEvents: Event[] = []
 
-const mockConnectedChallenges: Challenge[] = [
-  {
-    id: "roundups",
-    name: "Round-Ups",
-    description: "Round up purchases to the nearest dollar",
-    subtitle: "Save spare change automatically",
-    icon: "coins",
-    expectedImpact: "$20-50/month",
-    isActive: true,
-    sinkPodId: "1",
-    sinkPodName: "Emergency Fund",
-  },
-  {
-    id: "weekly-auto",
-    name: "Weekly Auto-Save",
-    description: "Automatically save $50 every week",
-    subtitle: "Consistent weekly savings",
-    icon: "calendar",
-    expectedImpact: "$200/month",
-    isActive: true,
-    sinkPodId: "1",
-    sinkPodName: "Emergency Fund",
-  },
-]
+const mockConnectedChallenges: Challenge[] = []
 
 export default function PodDetailPage() {
   const params = useParams()
@@ -105,7 +54,7 @@ export default function PodDetailPage() {
     )
   }
 
-  const monthlyRate = 150 // Mock calculation
+  const monthlyRate = 0 // Will be calculated from actual data
   const eta = calculateETA(pod.currentAmount, pod.targetAmount, monthlyRate)
 
   return (
@@ -225,11 +174,11 @@ export default function PodDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Days Active</span>
-                  <span className="font-medium">45</span>
+                  <span className="font-medium">0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Total Deposits</span>
-                  <span className="font-medium">12</span>
+                  <span className="font-medium">0</span>
                 </div>
               </CardContent>
             </Card>

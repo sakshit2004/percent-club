@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -91,8 +92,8 @@ export default function HowItWorksPage() {
           <motion.div {...fadeIn} className="md:justify-self-end w-full max-w-md">
             <Card>
               <CardHeader>
-                <CardTitle>Emergency Fund</CardTitle>
-                <CardDescription>Target $5,000 • by Dec 31</CardDescription>
+                <CardTitle>Savings Goal</CardTitle>
+                <CardDescription>Target amount • by date</CardDescription>
               </CardHeader>
               <CardContent className="flex items-center gap-6">
                 <PodProgressRing current={3750} target={5000} size={100} />
@@ -135,7 +136,7 @@ export default function HowItWorksPage() {
             <Card className="h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-info" /> Name your Agent
+                  <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={20} height={20} className="w-5 h-5 object-contain" /> Name your Agent
                 </CardTitle>
                 <CardDescription>Personalize your assistant</CardDescription>
               </CardHeader>
@@ -230,7 +231,7 @@ export default function HowItWorksPage() {
                 <div className="rounded bg-primary/10 px-3 py-2">Find me a cheaper phone plan</div>
               </div>
               <div className="flex gap-2 justify-end">
-                <div className="rounded bg-muted px-3 py-2">Found 2 options: save ~$18/mo</div>
+                <div className="rounded bg-muted px-3 py-2">Found 2 options: save monthly amount</div>
               </div>
               <div className="rounded border p-3">• Switch to MVNO A • Negotiate with Carrier B</div>
             </CardContent>

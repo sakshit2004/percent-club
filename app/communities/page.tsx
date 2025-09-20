@@ -273,7 +273,7 @@ export default function CommunitiesPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">This Week</span>
-                    <span className="font-medium">+12 posts</span>
+                    <span className="font-medium">+0 posts</span>
                   </div>
                 </div>
               </CardContent>

@@ -20,29 +20,9 @@ import { Plus, Target, Eye, MoreHorizontal, Edit, Trash2, Download, Star, Info }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { Inflow, Pod } from "@/types"
 
-// Mock inflows data with more comprehensive sample data
-const mockInflows: Record<string, Inflow[]> = {
-  "1": [
-    { type: "roundups", amountLabel: "$18 / 30d", lastContribution: "2024-01-15" },
-    { type: "autosave", amountLabel: "$50 / 30d", lastContribution: "2024-01-14" },
-    { type: "cashback", amountLabel: "$12 / 30d", lastContribution: "2024-01-13" },
-  ],
-  "2": [
-    { type: "roundups", amountLabel: "$8 / 30d", lastContribution: "2024-01-14" },
-    { type: "autosave", amountLabel: "$25 / 30d", lastContribution: "2024-01-13" },
-  ],
-  "3": [
-    { type: "roundups", amountLabel: "$15 / 30d", lastContribution: "2024-01-15" },
-    { type: "cashback", amountLabel: "$5 / 30d", lastContribution: "2024-01-12" },
-  ],
-}
-
-// Mock recent activity data
-const mockRecentActivity: Record<string, string> = {
-  "1": "$4.60 via Round-Ups yesterday",
-  "2": "$25.00 via Auto-Save today",
-  "3": "$2.30 via Round-Ups 2 days ago",
-}
+// Empty data structures - will be populated from API
+const mockInflows: Record<string, Inflow[]> = {}
+const mockRecentActivity: Record<string, string> = {}
 
 export default function PodsPage() {
   const router = useRouter()
@@ -469,9 +449,9 @@ export default function PodsPage() {
               <div>
                 <Label className="text-xs text-muted-foreground">Recent Activity</Label>
                 <div className="space-y-2 mt-2">
-                  <div className="text-sm">$4.60 via Round-Ups yesterday</div>
-                  <div className="text-sm">$25.00 via Auto-Save 2 days ago</div>
-                  <div className="text-sm">$2.30 via Cashback 3 days ago</div>
+                  <div className="text-sm">Amount via Round-Ups yesterday</div>
+                  <div className="text-sm">Amount via Auto-Save 2 days ago</div>
+                  <div className="text-sm">Amount via Cashback 3 days ago</div>
                 </div>
               </div>
             </div>

@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { 
   Settings, 
-  Bot, 
   Send, 
   Loader2, 
   CheckCircle, 
@@ -33,6 +32,7 @@ import {
   RefreshCw,
   Link as LinkIcon
 } from "lucide-react"
+import Image from "next/image"
 import { PanelGroup as ResizablePanelGroup, Panel as ResizablePanel, PanelResizeHandle as ResizableHandle } from "react-resizable-panels"
 import type { Subscription, Offer, AgentProposal, Pod } from "@/types"
 import { usePodsLive, useRecurring, useInstitutions, useRoundups, useLinkedCounts } from "@/lib/penny/client"
@@ -82,105 +82,23 @@ export default function AgentPage() {
   const institutionsQuery = useInstitutions()
   const roundupsQuery = useRoundups()
 
-  // Initialize with hardcoded demo conversation showcasing capabilities
+  // Initialize with welcome message
   useEffect(() => {
     const now = new Date().toISOString()
-    const demoMessages: ChatMessage[] = [
-      {
-        id: "m0",
-        role: "agent",
-        text: `Hi! I'm ${agentName}, your savings copilot. I can: review subscriptions and propose cancellations/reschedules, suggest a safe weekly save, find and log savings from deals, sync data, and even be renamed. Want a tour?`,
-        timestamp: now,
-        suggestions: [
-          { label: "Run monthly review", action: "review-subscriptions" },
-          { label: "Suggest weekly save", action: "safe-to-save" },
-          { label: "Find me deals", action: "find-deals" },
-          { label: "Connect bank", action: "connect-bank" },
-          { label: "Rename agent", action: "rename-agent" },
-        ],
-      },
-      {
-        id: "m1",
-        role: "user",
-        text: "Run the monthly review.",
-        timestamp: now,
-      },
-      {
-        id: "m2",
-        role: "agent",
-        text: "I found 5 active subscriptions with potential savings of $28/mo. Netflix might be duplicate, Telco Plan looks overpriced, Gym shows low usage.",
-        timestamp: now,
-        suggestions: [
-          { label: "Show my subscriptions", action: "show-subscriptions" },
-          { label: "Cancel Netflix", action: "cancel-netflix" },
-          { label: "Reschedule Telco", action: "reschedule-telco" },
-        ],
-      },
-      {
-        id: "m3",
-        role: "user",
-        text: "How much can I safely save this week?",
-        timestamp: now,
-      },
-      {
-        id: "m4",
-        role: "agent",
-        text: "You can safely save $24/week. Bills cluster Tue–Thu, so I keep a $25 buffer. Want to preview the deposit?",
-        timestamp: now,
-        suggestions: [
-          { label: "Preview $24 deposit", action: "preview-save" },
-          { label: "Schedule weekly saves", action: "schedule-saves" },
-        ],
-      },
-      {
-        id: "m5",
-        role: "user",
-        text: "Any deals for me?",
-        timestamp: now,
-      },
-      {
-        id: "m6",
-        role: "agent",
-        text: "I found a 10% Uber Eats coupon, 8% off Amazon gift card, Spotify cashback, and a cheaper telco plan.",
-        timestamp: now,
-        suggestions: [
-          { label: "Show deals", action: "show-deals" },
-          { label: "Redeem Amazon Gift Card", action: "redeem-amazon-gc" },
-        ],
-      },
-      {
-        id: "m7",
-        role: "user",
-        text: "Can you connect my bank and sync?",
-        timestamp: now,
-      },
-      {
-        id: "m8",
-        role: "agent",
-        text: "Tap to connect your bank, then you can sync transactions anytime.",
-        timestamp: now,
-        suggestions: [
-          { label: "Connect bank", action: "connect-bank" },
-          { label: "Sync now", action: "sync-now" },
-        ],
-      },
-      {
-        id: "m9",
-        role: "user",
-        text: "Also, can I rename you?",
-        timestamp: now,
-      },
-      {
-        id: "m10",
-        role: "agent",
-        text: "Sure — pick any name you like.",
-        timestamp: now,
-        suggestions: [
-          { label: "Rename agent", action: "rename-agent" },
-        ],
-      },
-    ]
-    setMessages(demoMessages)
+    const welcomeMessage: ChatMessage = {
+      id: "welcome",
+      role: "agent",
+      text: `Hi! I'm ${agentName}, your savings copilot. I can help you review subscriptions, suggest safe weekly saves, find deals, sync data, and more. How can I help you today?`,
+      timestamp: now,
+      suggestions: [
+        { label: "Run monthly review", action: "review-subscriptions" },
+        { label: "Suggest weekly save", action: "safe-to-save" },
+        { label: "Find me deals", action: "find-deals" },
+        { label: "Connect bank", action: "connect-bank" },
+        { label: "Rename agent", action: "rename-agent" },
+      ],
+    }
+    setMessages([welcomeMessage])
   }, [agentName])
 
   // Check for mobile
@@ -295,7 +213,7 @@ export default function AgentPage() {
         setActiveTab("subs")
         break
       case "cancel-netflix":
-        handleSendMessage("Propose canceling Netflix and log expected savings to my preferred pod.")
+        handleSendMessage("Propose canceling a subscription and log expected savings to my preferred pod.")
         setActiveTab("subs")
         break
       case "reschedule-telco":
@@ -316,7 +234,7 @@ export default function AgentPage() {
         setActiveTab("deals")
         break
       case "redeem-amazon-gc":
-        handleSendMessage("Find me an Amazon gift card deal and record the savings to a pod.")
+        handleSendMessage("Find me a gift card deal and record the savings to a pod.")
         setActiveTab("deals")
         break
       case "connect-bank":
@@ -398,15 +316,15 @@ export default function AgentPage() {
     const lowerMessage = message.toLowerCase()
 
     if (lowerMessage.includes("subscription")) {
-      return "I found 5 active subscriptions with potential savings of $28/mo. Netflix is flagged as duplicate, Telco Plan is overpriced, and Gym Membership shows low usage. Check the Monthly Review tab for detailed analysis and actions."
+      return "I found 5 active subscriptions with potential savings. Some subscriptions are flagged as duplicate, overpriced, or showing low usage. Check the Monthly Review tab for detailed analysis and actions."
     }
 
     if (lowerMessage.includes("save") || lowerMessage.includes("money")) {
-      return "Based on your spending patterns, you can safely save $24/week. Bills cluster Tue–Thu, so this keeps a $25 buffer. Would you like me to preview this deposit?"
+      return "Based on your spending patterns, you can safely save a weekly amount. Bills cluster Tue–Thu, so this keeps a buffer. Would you like me to preview this deposit?"
     }
 
     if (lowerMessage.includes("deal")) {
-      return "I found 4 deals that could save you money! There's a 10% Uber Eats coupon, 8% Amazon gift card discount, Spotify cashback, and a cheaper telco plan. Check the Deals tab to redeem them."
+      return "I found 4 deals that could save you money! There are various coupons, gift card discounts, cashback offers, and alternative plans available. Check the Deals tab to redeem them."
     }
 
     return "I'm here to help you save money and manage your finances better. I can review your subscriptions, suggest safe amounts to save, and find deals that match your spending patterns. What would you like to explore?"
@@ -418,13 +336,13 @@ export default function AgentPage() {
     if (lowerMessage.includes("subscription")) {
       return [
         { label: "Show my subscriptions", action: "show-subscriptions" },
-        { label: "Cancel Netflix", action: "cancel-netflix" },
+        { label: "Cancel subscription", action: "cancel-subscription" },
       ]
     }
 
     if (lowerMessage.includes("save")) {
       return [
-        { label: "Preview $24 deposit", action: "preview-save" },
+        { label: "Preview deposit", action: "preview-save" },
         { label: "Schedule weekly saves", action: "schedule-saves" },
       ]
     }
@@ -467,7 +385,7 @@ export default function AgentPage() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Bot className="h-4 w-4 text-primary-foreground" />
+              <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={16} height={16} className="w-4 h-4 object-contain" />
             </div>
             <div>
               <h1 className="font-semibold">{agentName}</h1>
@@ -689,7 +607,7 @@ function ChatInterface({ messages, onSendMessage, onSuggestionClick, isLoading, 
               <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 {message.role === "agent" && (
                   <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary-foreground" />
+                    <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={16} height={16} className="w-4 h-4 object-contain" />
                   </div>
                 )}
                 <div className={`max-w-[80%] ${message.role === "user" ? "order-first" : ""}`}>
@@ -1075,14 +993,14 @@ function SafeToSaveCard({ amount, riskLevel, onRiskChange, onSafeToSave }: SafeT
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cautious">Cautious ($18)</SelectItem>
-                <SelectItem value="normal">Normal ($24)</SelectItem>
-                <SelectItem value="aggressive">Aggressive ($32)</SelectItem>
+                <SelectItem value="cautious">Cautious</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="aggressive">Aggressive</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <p className="text-sm text-muted-foreground">
-            Bills cluster Tue–Thu; this keeps a $25 buffer.
+            Bills cluster Tue–Thu; this keeps a buffer.
           </p>
           <div className="flex gap-2">
             <Button onClick={() => onSafeToSave(amount)} className="flex-1">

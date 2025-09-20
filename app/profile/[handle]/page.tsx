@@ -33,146 +33,44 @@ import {
 } from "lucide-react"
 import type { Profile, Post, Community, Pod, LeaderboardEntry } from "@/types"
 
-// Mock data
+// Empty profile data - will be populated from API
 const mockOwnProfile: Profile = {
-  id: "1",
-  handle: "saver_ava",
-  alias: "Saver Ava",
-  avatar: "/diverse-user-avatars.png",
-  level: 3,
-  xp: 1250,
-  badges: ["first-pod", "streak-7", "saver-500", "challenger"],
-  followersCount: 128,
-  followingCount: 76,
+  id: "",
+  handle: "user",
+  alias: "User",
+  avatar: "/placeholder-user.jpg",
+  level: 1,
+  xp: 0,
+  badges: [],
+  followersCount: 0,
+  followingCount: 0,
   isFollowing: false,
-  featuredPodId: "1",
-  featuredPodProgress: 45,
+  featuredPodId: "",
+  featuredPodProgress: 0,
 }
 
 const mockOtherProfile: Profile = {
-  id: "2",
-  handle: "savingsstar",
-  alias: "Sarah Chen",
-  avatar: "/diverse-woman-avatar.png",
-  level: 12,
-  xp: 2450,
-  badges: ["first-pod", "streak-30", "saver-1000", "challenger", "social-butterfly"],
-  followersCount: 234,
-  followingCount: 89,
+  id: "",
+  handle: "user",
+  alias: "User",
+  avatar: "/placeholder-user.jpg",
+  level: 1,
+  xp: 0,
+  badges: [],
+  followersCount: 0,
+  followingCount: 0,
   isFollowing: false,
-  featuredPodId: "1",
-  featuredPodProgress: 68,
+  featuredPodId: "",
+  featuredPodProgress: 0,
 }
 
-const mockPosts: Post[] = [
-  {
-    id: "1",
-    authorHandle: "saver_ava",
-    authorAlias: "Saver Ava",
-    authorAvatar: "/diverse-user-avatars.png",
-    content: "Just hit 45% on my education fund! The round-up challenge has been a game changer. Small amounts really do add up over time. 💪",
-    tags: ["#milestone", "#education", "#roundups"],
-    visibility: "public",
-    reactions: 12,
-    hasReacted: false,
-    createdAt: "2024-01-15T14:30:00Z",
-  },
-  {
-    id: "2",
-    authorHandle: "saver_ava",
-    authorAlias: "Saver Ava",
-    authorAvatar: "/diverse-user-avatars.png",
-    content: "Pro tip: Set up your challenges to feed different pods based on priority. My round-ups go to education fund, weekly auto-save goes to travel fund!",
-    tags: ["#tips", "#strategy", "#challenges"],
-    visibility: "public",
-    reactions: 8,
-    hasReacted: false,
-    createdAt: "2024-01-14T09:15:00Z",
-  },
-  {
-    id: "3",
-    authorHandle: "saver_ava",
-    authorAlias: "Saver Ava",
-    authorAvatar: "/diverse-user-avatars.png",
-    content: "Week 3 of the 52-week challenge complete! Already saved $78 and it's getting easier each week. Who else is doing this challenge?",
-    tags: ["#52week", "#challenge", "#progress"],
-    visibility: "public",
-    reactions: 15,
-    hasReacted: true,
-    createdAt: "2024-01-13T16:20:00Z",
-  },
-]
+const mockPosts: Post[] = []
 
-const mockCommunities: Community[] = [
-  {
-    id: "1",
-    name: "Education Savers",
-    description: "From textbooks to tuition — % at a time",
-    membersCount: 1234,
-    isJoined: true,
-    avatar: "/emergency-fund-icon.png",
-  },
-  {
-    id: "2",
-    name: "Round-Up Ninjas",
-    description: "Pennies to progress",
-    membersCount: 892,
-    isJoined: true,
-    avatar: "/vacation-icon.png",
-  },
-  {
-    id: "3",
-    name: "52-Week Challengers",
-    description: "Steady, increasing weekly saves",
-    membersCount: 567,
-    isJoined: true,
-    avatar: "/challenge-icon.jpg",
-  },
-]
+const mockCommunities: Community[] = []
 
-const mockPods: Pod[] = [
-  {
-    id: "1",
-    name: "Education",
-    targetAmount: 15000,
-    currentAmount: 6750,
-    targetDate: "2025-06-01",
-    isFeatured: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-15T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Travel",
-    targetAmount: 5000,
-    currentAmount: 750,
-    targetDate: "2024-12-15",
-    isFeatured: false,
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-02-15T00:00:00Z",
-  },
-]
+const mockPods: Pod[] = []
 
-const mockRecentActivity = [
-  {
-    id: "1",
-    type: "safe-to-save",
-    description: "+$24 weekly safe-save → Education",
-    date: "2024-01-15T10:00:00Z",
-  },
-  {
-    id: "2",
-    type: "roundup",
-    description: "+$3.50 round-up → Education",
-    date: "2024-01-14T15:30:00Z",
-  },
-  {
-    id: "3",
-    type: "challenge",
-    description: "52-week challenge: Week 3 complete",
-    date: "2024-01-13T09:00:00Z",
-  },
-]
+const mockRecentActivity = []
 
 export default function ProfilePage() {
   const params = useParams()
@@ -506,7 +404,7 @@ export default function ProfilePage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{post.authorAlias}</span>
-                        <Badge variant="outline" className="text-xs">L3</Badge>
+                        <Badge variant="outline" className="text-xs">L1</Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>@{post.authorHandle}</span>

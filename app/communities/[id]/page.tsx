@@ -16,48 +16,19 @@ import {
 } from "lucide-react"
 import type { Community, Post, LeaderboardEntry, Pod } from "@/types"
 
-// Mock data
+// Empty community data - will be populated from API
 const mockCommunity: Community = {
-  id: "1",
-  name: "Education Savers",
-  description: "From textbooks to tuition — % at a time. Join fellow students and families saving for education goals.",
-  membersCount: 1234,
-  isJoined: true,
-  avatar: "/emergency-fund-icon.png",
+  id: "",
+  name: "",
+  description: "",
+  membersCount: 0,
+  isJoined: false,
+  avatar: "/placeholder.svg",
 }
 
-const mockCommunityPosts: Post[] = [
-  {
-    id: "1",
-    authorHandle: "savingsstar",
-    authorAlias: "Sarah Chen",
-    authorAvatar: "/diverse-woman-avatar.png",
-    content: "Just hit 68% on my education fund! The round-up challenge has been a game changer. Small amounts really do add up over time.",
-    tags: ["#roundups", "#milestone", "#education"],
-    visibility: "public",
-    reactions: 12,
-    hasReacted: false,
-    createdAt: "2024-01-15T14:30:00Z",
-  },
-  {
-    id: "2",
-    authorHandle: "budgetboss",
-    authorAlias: "Mike Rodriguez",
-    authorAvatar: "/man-avatar.png",
-    content: "Education pod: 42% → 45% this week! The weekly auto-save is working perfectly. Can't wait to hit 50%!",
-    tags: ["#education", "#autosave", "#progress"],
-    visibility: "public",
-    reactions: 9,
-    hasReacted: true,
-    createdAt: "2024-01-14T08:30:00Z",
-  },
-]
+const mockCommunityPosts: Post[] = []
 
-const mockLeaderboard: LeaderboardEntry[] = [
-  { rank: 1, handle: "savingsstar", alias: "Sarah Chen", progress: 68, streak: 12 },
-  { rank: 2, handle: "budgetboss", alias: "Mike Rodriguez", progress: 45, streak: 8 },
-  { rank: 3, handle: "goaldigger", alias: "Emma Thompson", progress: 42, streak: 15 },
-]
+const mockLeaderboard: LeaderboardEntry[] = []
 
 export default function CommunityDetailPage() {
   const params = useParams()
@@ -81,7 +52,7 @@ export default function CommunityDetailPage() {
   const handleJoinLeave = () => {
     setCommunity(prev => ({ ...prev, isJoined: !prev.isJoined }))
     toast({
-      title: community.isJoined ? "Left Education Savers" : "Joined — say hi!",
+      title: community.isJoined ? `Left ${community.name}` : "Joined — say hi!",
       description: community.isJoined ? "You can rejoin anytime." : "Welcome to the community!",
     })
   }
@@ -149,11 +120,11 @@ export default function CommunityDetailPage() {
                   <p className="text-sm text-muted-foreground">Members</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold">24</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-sm text-muted-foreground">Posts this week</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold">7</p>
+                  <p className="text-2xl font-bold">0</p>
                   <p className="text-sm text-muted-foreground">Your streak</p>
                 </div>
               </div>
@@ -181,12 +152,12 @@ export default function CommunityDetailPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{post.authorAlias}</span>
-                            <Badge variant="outline" className="text-xs">L3</Badge>
+                            <Badge variant="outline" className="text-xs">L1</Badge>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <span>@{post.authorHandle}</span>
                             <span>•</span>
-                            <span>2h</span>
+                            <span>now</span>
                           </div>
                         </div>
                       </div>
@@ -205,7 +176,7 @@ export default function CommunityDetailPage() {
                         </Button>
                         <Button variant="ghost" size="sm">
                           <MessageCircle className="h-4 w-4 mr-2" />
-                          3
+                          0
                         </Button>
                         <Button variant="ghost" size="sm">
                           <Bookmark className="h-4 w-4 mr-2" />
@@ -294,7 +265,7 @@ export default function CommunityDetailPage() {
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4">What we're about</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Education Savers is a supportive community for anyone saving for education goals. 
+                      This is a supportive community for anyone saving for their goals. 
                       Whether you're saving for your own education, your children's future, or helping 
                       family members, we're here to share tips, celebrate milestones, and keep each other motivated.
                     </p>
@@ -313,26 +284,18 @@ export default function CommunityDetailPage() {
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4">Popular tags</h3>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="secondary">#education</Badge>
-                      <Badge variant="secondary">#progress</Badge>
-                      <Badge variant="secondary">#tips</Badge>
-                      <Badge variant="secondary">#milestone</Badge>
-                      <Badge variant="secondary">#roundups</Badge>
+                      <Badge variant="secondary">#community</Badge>
+                      <Badge variant="secondary">#savings</Badge>
+                      <Badge variant="secondary">#goals</Badge>
                     </div>
                     
                     <div className="space-y-2">
                       <h4 className="font-medium">Moderators</h4>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs">SC</AvatarFallback>
+                          <AvatarFallback className="text-xs">M</AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">@savingsstar</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs">MR</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">@budgetboss</span>
+                        <span className="text-sm">@moderator</span>
                       </div>
                     </div>
 

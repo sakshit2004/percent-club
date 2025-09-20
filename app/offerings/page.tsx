@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Target, Zap, Bot, Users, ArrowLeft } from "lucide-react"
+import { Target, Zap, Users, ArrowLeft } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -15,17 +16,17 @@ export default function OfferingsPage() {
       </div>
       <h1 className="text-3xl font-bold mb-4">What We Offer</h1>
       <p className="text-muted-foreground mb-8 max-w-2xl">
-        Everything you need to plan, automate, and celebrate your savings.
+        Everything you need to connect with communities, tackle challenges together, and get personalized finance coaching.
       </p>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader>
             <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
-              <Target className="h-5 w-5 text-primary" />
+              <Users className="h-5 w-5 text-primary" />
             </div>
-            <CardTitle>Pods</CardTitle>
+            <CardTitle>Communities</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Goal-based buckets with visual progress.</CardContent>
+          <CardContent className="text-sm text-muted-foreground">Diverse groups with shared financial goals.</CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -34,16 +35,16 @@ export default function OfferingsPage() {
             </div>
             <CardTitle>Challenges</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Round-ups, weekly autosave, and more.</CardContent>
+          <CardContent className="text-sm text-muted-foreground">Collaborative challenges and group activities.</CardContent>
         </Card>
         <Card>
           <CardHeader>
             <div className="h-10 w-10 rounded bg-info/10 flex items-center justify-center">
-              <Bot className="h-5 w-5 text-info" />
+              <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={20} height={20} className="w-5 h-5 object-contain" />
             </div>
             <CardTitle>AI Agent</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Finds savings and suggests safe-to-save.</CardContent>
+          <CardContent className="text-sm text-muted-foreground">Private finance coach for personalized advice.</CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -52,7 +53,7 @@ export default function OfferingsPage() {
             </div>
             <CardTitle>Community</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">Motivation from people on the same path.</CardContent>
+          <CardContent className="text-sm text-muted-foreground">Peer support and shared success stories.</CardContent>
         </Card>
       </div>
     </div>

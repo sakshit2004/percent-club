@@ -503,7 +503,7 @@ function EnhancedChallengeCard({
   const getDescription = () => {
     switch (challenge.id) {
       case "roundups":
-        return "Round your purchases; batched when pending ≥ $5"
+        return "Round your purchases; batched when threshold reached"
       case "weekly-auto":
         return "Pick an amount or ask your Agent"
       case "52-week":

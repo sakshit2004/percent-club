@@ -796,7 +796,7 @@ function PostCard({ post, onReact, onSave, onFollow, onUnfollow, onReport, onHid
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">{post.authorAlias}</span>
-                <Badge variant="outline" className="text-xs">L3</Badge>
+                <Badge variant="outline" className="text-xs">L1</Badge>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>@{post.authorHandle}</span>
@@ -866,7 +866,7 @@ function PostCard({ post, onReact, onSave, onFollow, onUnfollow, onReport, onHid
             </Button>
             <Button variant="ghost" size="sm" onClick={onOpenComments}>
               <MessageCircle className="h-4 w-4 mr-2" />
-              3
+              0
             </Button>
             <Button variant="ghost" size="sm" onClick={handleSave} className={isSaved ? "text-primary" : ""}>
               <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? "fill-current" : ""}`} />

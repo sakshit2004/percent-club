@@ -41,13 +41,15 @@ export default function Page() {
         options: {
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}${searchParams?.get("redirect") || "/connect"}`,
+            `${window.location.origin}/connect`,
           data: {
             display_name: displayName,
           },
         },
       })
       if (error) throw error
+      
+      // Always redirect to success page after sign up
       router.push("/auth/sign-up-success")
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
