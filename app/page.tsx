@@ -21,7 +21,6 @@ import { AnimatedTagline } from "@/components/ui/animated-tagline"
 import { HeroLonniee } from "@/components/landing/hero-lonniee"
 import { CommunitySpotlight } from "@/components/landing/community-spotlight"
 import { MeetLonniee } from "@/components/landing/meet-lonniee"
-import { SecurityPrivacy } from "@/components/landing/security-privacy"
 import { HowItWorksCommunity } from "@/components/landing/how-it-works-community"
 import { CtaBand } from "@/components/landing/cta-band"
 
@@ -55,6 +54,7 @@ export default function LandingPage() {
             <Link href="/#how-it-works" className="text-sm text-white/80 hover:text-white transition-colors">How It Works</Link>
             <Link href="/pricing" className="text-sm text-white/80 hover:text-white transition-colors">Pricing</Link>
             <Link href="/about" className="text-sm text-white/80 hover:text-white transition-colors">About</Link>
+            <Link href="/security" className="text-sm text-white/80 hover:text-white transition-colors">Security</Link>
           </div>
 
           {/* Mobile: hamburger menu */}
@@ -83,14 +83,18 @@ export default function LandingPage() {
                   <Link href="/#how-it-works" className="block px-3 py-2 rounded-md hover:bg-white/5 text-white">How It Works</Link>
                   <Link href="/pricing" className="block px-3 py-2 rounded-md hover:bg-white/5 text-white">Pricing</Link>
                   <Link href="/about" className="block px-3 py-2 rounded-md hover:bg-white/5 text-white">About</Link>
+                  <Link href="/security" className="block px-3 py-2 rounded-md hover:bg-white/5 text-white">Security</Link>
                 </div>
                 <div className="sticky bottom-0 p-4 border-t border-white/10 space-y-2">
-                  <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Link href="/#communities">Join the Community</Link>
+                  <Button variant="ghost" asChild className="w-full text-white/80 hover:text-white hover:bg-white/5">
+                    <Link href="/auth/login">Sign In</Link>
                   </Button>
-                  <Button variant="outline" asChild className="w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
-                    <Link href="/#lonniee">Meet Lonniee</Link>
-                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+                    <Button asChild className="relative w-full bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-400/50 shadow-lg">
+                      <Link href="/auth/sign-up">Join percent club</Link>
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -101,12 +105,12 @@ export default function LandingPage() {
             <Button variant="ghost" asChild className="text-white/80 hover:text-white hover:bg-white/5">
               <Link href="/auth/login">Sign In</Link>
             </Button>
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Link href="/#communities">Join the Community</Link>
-            </Button>
-            <Button variant="outline" asChild className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
-              <Link href="/#lonniee">Meet Lonniee</Link>
-            </Button>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+              <Button asChild className="relative bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-400/50 shadow-lg">
+                <Link href="/auth/sign-up">Join percent club</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -123,8 +127,6 @@ export default function LandingPage() {
       {/* How It Works - Community & Challenges */}
       <HowItWorksCommunity />
 
-      {/* Security & Privacy */}
-      <SecurityPrivacy />
 
       {/* Final CTA Section */}
       <CtaBand />

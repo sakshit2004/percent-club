@@ -12,21 +12,21 @@ interface AuthGuardProps {
   redirectTo?: string
 }
 
-export function AuthGuard({ 
-  children, 
-  fallback = <LoadingSkeleton />, 
-  redirectTo = "/auth/login" 
+export function AuthGuard({
+  children,
+  fallback = <LoadingSkeleton />,
+  redirectTo = "/auth/login"
 }: AuthGuardProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
     const checkUser = async () => {
       try {
+        const supabase = createClient()
         const { data: { user }, error } = await supabase.auth.getUser()
-        
+
         if (error) {
           console.error("Auth error:", error)
           router.push(redirectTo)
@@ -50,6 +50,7 @@ export function AuthGuard({
     checkUser()
 
     // Listen for auth changes
+    const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
@@ -61,7 +62,7 @@ export function AuthGuard({
     )
 
     return () => subscription.unsubscribe()
-  }, [router, redirectTo, supabase.auth])
+  }, [router, redirectTo])
 
   if (loading) {
     return <>{fallback}</>
@@ -78,11 +79,11 @@ export function AuthGuard({
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     const checkUser = async () => {
       try {
+        const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
       } catch (error) {
@@ -95,6 +96,7 @@ export function useAuth() {
 
     checkUser()
 
+    const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null)
@@ -103,7 +105,7 @@ export function useAuth() {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [])
 
   return { user, loading }
 }

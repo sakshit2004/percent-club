@@ -1,18 +1,20 @@
 import { updateSession } from "@/lib/supabase/middleware"
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('🚀 MIDDLEWARE EXECUTED for:', request.nextUrl.pathname)
-    console.log('🚀 MIDDLEWARE METHOD:', request.method)
-    console.log('🚀 MIDDLEWARE HEADERS:', Object.fromEntries(request.headers.entries()))
+    console.log('🚀 MAIN MIDDLEWARE: Request received for:', request.nextUrl.pathname)
   }
   
   try {
-    return await updateSession(request)
+    const result = await updateSession(request)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🚀 MAIN MIDDLEWARE: Result type:', result.constructor.name)
+    }
+    return result
   } catch (error) {
-    console.error('🚀 MIDDLEWARE ERROR:', error)
-    return NextResponse.next({ request })
+    console.error('🚀 MAIN MIDDLEWARE ERROR:', error)
+    return new Response('Internal Server Error', { status: 500 })
   }
 }
 
