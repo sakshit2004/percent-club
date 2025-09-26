@@ -35,8 +35,6 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 const navigation = [
-  { name: "Pods", href: "/pods", icon: Target },
-  { name: "Challenges", href: "/challenges", icon: Zap },
   { name: "Lonniee", href: "/agent", icon: Bot },
   { name: "Feed", href: "/feed", icon: Users },
   { name: "Communities", href: "/communities", icon: Users },
@@ -160,7 +158,7 @@ export function MainNav() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/pods" className="flex items-center gap-2">
+          <Link href="/agent" className="flex items-center gap-2">
             <Image src="/percentclub-logo.svg" alt="percent club logo" width={40} height={40} priority />
             <span className="text-xl font-bold">percent club</span>
           </Link>
@@ -278,10 +276,6 @@ export function MainNav() {
                     <Link href="/settings" className="flex items-center gap-3 px-4 py-2 hover:bg-muted" onClick={() => setShowDesktopMenu(false)}>
                       <Settings className="h-4 w-4" />
                       <span>Settings</span>
-                    </Link>
-                    <Link href="/pods" className="flex items-center gap-3 px-4 py-2 hover:bg-muted" onClick={() => setShowDesktopMenu(false)}>
-                      <Target className="h-4 w-4" />
-                      <span>My Pods</span>
                     </Link>
                     <Link href="/agent" className="flex items-center gap-3 px-4 py-2 hover:bg-muted" onClick={() => setShowDesktopMenu(false)}>
                       <Image src="/Looniee-logo-main.svg" alt="Looniee AI" width={16} height={16} className="w-4 h-4 object-contain" />
@@ -424,12 +418,6 @@ export function MainNav() {
                 <Link href="/settings" onClick={() => setShowMobileMenu(false)}>
                   <Settings className="h-4 w-4 mr-3" />
                   Settings
-                </Link>
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link href="/pods" onClick={() => setShowMobileMenu(false)}>
-                  <Target className="h-4 w-4 mr-3" />
-                  My Pods
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild>

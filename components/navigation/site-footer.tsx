@@ -29,7 +29,7 @@ export function SiteFooter() {
             <span className="text-lg font-semibold">percent club</span>
           </div>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Save smarter with Pods, Challenges, and your AI savings assistant. Privacy-first, non-custodial savings.
+            Save smarter with your AI savings assistant. Privacy-first, non-custodial savings.
           </p>
         </div>
 
@@ -37,22 +37,6 @@ export function SiteFooter() {
         <div>
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground">Product</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              <Link 
-                href={isAuthenticated ? "/pods" : "/auth/login"} 
-                className="hover:text-foreground transition-colors"
-              >
-                Pods
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href={isAuthenticated ? "/challenges" : "/auth/login"} 
-                className="hover:text-foreground transition-colors"
-              >
-                Challenges
-              </Link>
-            </li>
             <li>
               <Link 
                 href={isAuthenticated ? "/agent" : "/auth/login"} 

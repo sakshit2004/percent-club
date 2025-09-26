@@ -20,7 +20,7 @@ export function CtaBand() {
             {/* Content */}
             <div className="space-y-4">
               <h2 className="text-3xl md:text-4xl font-bold text-white">
-                Ready to start saving smarter?
+                Get started today
               </h2>
               <p className="text-lg text-white/80 max-w-xl mx-auto">
                 Join thousands who trust Lonniee to help them reach their financial goals.

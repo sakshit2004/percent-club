@@ -21,7 +21,7 @@ export default function ConnectBankPage() {
             <div className="text-xs text-muted-foreground">Sandbox is supported. You can add a test institution now.</div>
             <div className="pt-2">
               <Button variant="outline" asChild className="bg-transparent">
-                <Link href="/pods">Skip for now</Link>
+                <Link href="/agent">Skip for now</Link>
               </Button>
             </div>
           </CardContent>

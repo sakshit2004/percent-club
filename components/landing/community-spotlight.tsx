@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Users, TrendingUp, Target, Zap, GraduationCap, Briefcase, Home, DollarSign } from "lucide-react"
+import { Users, TrendingUp, Target, Zap, GraduationCap, Briefcase, Home, ArrowRight, Sparkles, Star, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { GlassCard } from "@/components/ui/glass-card"
 import { Badge } from "@/components/ui/badge"
+
 
 const communityTypes = [
   {
@@ -17,7 +18,9 @@ const communityTypes = [
     color: "blue",
     description: "Budget-friendly tips for college life",
     challenges: ["Coffee to Books", "No-Spend Weekends", "Side Hustle Fund"],
-    recentActivity: "Sarah saved $200 for textbooks this month!"
+    recentActivity: "Sarah saved $200 for textbooks this month!",
+    successRate: "94%",
+    avgSavings: "$180/mo"
   },
   {
     id: "professionals",
@@ -27,7 +30,9 @@ const communityTypes = [
     color: "emerald",
     description: "Building wealth while advancing careers",
     challenges: ["Salary Negotiation", "Investment Starter", "Emergency Fund"],
-    recentActivity: "Mike increased his savings rate to 25%!"
+    recentActivity: "Mike increased his savings rate to 25%!",
+    successRate: "89%",
+    avgSavings: "$1,200/mo"
   },
   {
     id: "families",
@@ -37,7 +42,9 @@ const communityTypes = [
     color: "purple",
     description: "Managing money for the whole family",
     challenges: ["Kids' College Fund", "Family Vacation", "Home Improvement"],
-    recentActivity: "The Johnson family saved $500 for their vacation!"
+    recentActivity: "The Johnson family saved $500 for their vacation!",
+    successRate: "91%",
+    avgSavings: "$850/mo"
   },
   {
     id: "side-hustlers",
@@ -47,7 +54,9 @@ const communityTypes = [
     color: "amber",
     description: "Turning side gigs into main income",
     challenges: ["Freelance Fund", "Business Launch", "Passive Income"],
-    recentActivity: "Alex's side hustle now covers all groceries!"
+    recentActivity: "Alex's side hustle now covers all groceries!",
+    successRate: "87%",
+    avgSavings: "$650/mo"
   },
   {
     id: "investors",
@@ -57,9 +66,12 @@ const communityTypes = [
     color: "green",
     description: "Building long-term wealth through investing",
     challenges: ["Index Fund Starter", "Real Estate Fund", "Retirement Boost"],
-    recentActivity: "Emma's portfolio grew 12% this quarter!"
+    recentActivity: "Emma's portfolio grew 12% this quarter!",
+    successRate: "96%",
+    avgSavings: "$2,100/mo"
   }
 ]
+
 
 const rippleEffect = [
   { delay: 0, scale: 1, opacity: 0.8 },
@@ -106,13 +118,15 @@ export function CommunitySpotlight() {
 
   return (
     <section id="communities" className="py-20 md:py-32 relative overflow-hidden">
-      {/* Background effects */}
+      {/* Enhanced Background effects */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-blob-1"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-blob-2"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-blob-1"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-blob-2"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-500/5 rounded-full blur-2xl animate-pulse"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
+
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -121,20 +135,20 @@ export function CommunitySpotlight() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <Badge variant="outline" className="mb-4 border-blue-500/30 text-blue-400">
-            <Users className="h-4 w-4 mr-2" />
+          <Badge variant="outline" className="mb-6 border-blue-500/30 text-blue-400 bg-blue-500/10">
+            <Sparkles className="h-4 w-4 mr-2" />
             Diverse Communities
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Find your <span className="text-blue-400">finance tribe</span>
+          <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            Find your <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">finance tribe</span>
           </h2>
-          <p className="text-xl text-white/70 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
             Connect with people who share your financial goals and learn from their success stories.
           </p>
         </motion.div>
 
         {/* Community Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
           {communityTypes.map((community, index) => (
             <motion.div
               key={community.id}
@@ -142,11 +156,11 @@ export function CommunitySpotlight() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="relative"
+              className="relative group"
             >
               <GlassCard 
-                className={`p-6 cursor-pointer transition-all duration-300 hover:scale-105 ${
-                  activeCommunity === index ? 'ring-2 ring-blue-500/50' : ''
+                className={`p-8 cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl ${
+                  activeCommunity === index ? 'ring-2 ring-blue-500/50 shadow-blue-500/20' : ''
                 }`}
                 glow={activeCommunity === index}
               >
@@ -174,128 +188,69 @@ export function CommunitySpotlight() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-lg bg-gradient-to-br ${getColorClasses(community.color)}`}>
-                    {community.icon}
+                {/* Header with icon and stats */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${getColorClasses(community.color)} shadow-lg`}>
+                      {community.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">{community.name}</h3>
+                      <p className="text-sm text-white/60">{community.members} members</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{community.name}</h3>
-                    <p className="text-sm text-white/60">{community.members} members</p>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-emerald-400">{community.successRate}</div>
+                    <div className="text-xs text-white/50">success rate</div>
                   </div>
                 </div>
 
-                <p className="text-white/70 text-sm mb-4">{community.description}</p>
+                <p className="text-white/80 text-base mb-6 leading-relaxed">{community.description}</p>
 
-                <div className="space-y-2 mb-4">
+                {/* Success metrics */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-400" />
+                    <span className="text-sm text-white/70">Avg. savings:</span>
+                    <span className="text-sm font-semibold text-emerald-400">{community.avgSavings}</span>
+                  </div>
+                </div>
+
+                {/* Challenge badges */}
+                <div className="flex flex-wrap gap-2 mb-6">
                   {community.challenges.slice(0, 2).map((challenge, i) => (
-                    <Badge key={i} variant="outline" className={`text-xs ${getBadgeColor(community.color)}`}>
+                    <Badge key={i} variant="outline" className={`text-xs px-3 py-1 ${getBadgeColor(community.color)}`}>
                       {challenge}
                     </Badge>
                   ))}
                 </div>
 
-                <div className="text-xs text-white/50 italic">
-                  "{community.recentActivity}"
+                {/* Recent activity */}
+                <div className="bg-white/5 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <MessageCircle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-white/90 italic mb-1">"{community.recentActivity}"</div>
+                      <div className="text-xs text-white/50">Recent success story</div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Join button */}
+                <Button 
+                  variant="outline" 
+                  className={`w-full border-2 ${getBadgeColor(community.color)} hover:scale-105 transition-all duration-300`}
+                >
+                  Join Community
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </GlassCard>
             </motion.div>
           ))}
         </div>
 
-        {/* Challenge Ripple Visualization */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-          viewport={{ once: true }}
-          className="relative max-w-4xl mx-auto mb-16"
-        >
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-white mb-4">
-              Challenges spread like <span className="text-emerald-400">ripples</span>
-            </h3>
-            <p className="text-white/70">
-              When one person succeeds, it inspires others in their community
-            </p>
-          </div>
 
-          <div className="relative h-64 flex items-center justify-center">
-            {/* Central challenge */}
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute z-10 w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center"
-            >
-              <Target className="h-8 w-8 text-white" />
-            </motion.div>
 
-            {/* Ripple circles */}
-            {[1, 2, 3, 4].map((ring) => (
-              <motion.div
-                key={ring}
-                className="absolute border-2 border-emerald-400/30 rounded-full"
-                style={{
-                  width: `${ring * 80}px`,
-                  height: `${ring * 80}px`,
-                }}
-                animate={{
-                  scale: [0.8, 1.2, 0.8],
-                  opacity: [0.3, 0.1, 0.3],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  delay: ring * 0.5,
-                }}
-              />
-            ))}
-
-            {/* Community nodes */}
-            {communityTypes.map((community, index) => {
-              const angle = (index * 360) / communityTypes.length
-              const radius = 120
-              const x = Math.cos((angle * Math.PI) / 180) * radius
-              const y = Math.sin((angle * Math.PI) / 180) * radius
-
-              return (
-                <motion.div
-                  key={community.id}
-                  className="absolute w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center"
-                  style={{
-                    left: `calc(50% + ${x}px - 16px)`,
-                    top: `calc(50% + ${y}px - 16px)`,
-                  }}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: index * 0.3,
-                  }}
-                >
-                  {community.icon}
-                </motion.div>
-              )
-            })}
-          </div>
-        </motion.div>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
-          <Button size="lg" asChild className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
-            <Link href="/#communities">
-              <Users className="mr-2 h-5 w-5" />
-              Explore All Communities
-            </Link>
-          </Button>
-        </motion.div>
       </div>
     </section>
   )
