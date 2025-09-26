@@ -50,7 +50,7 @@ import {
   type CommentWithAuthor,
 } from "@/lib/social"
 import { createClient } from "@/lib/supabase/client"
-import { usePods } from "@/lib/api"
+import { usePodsLive } from "@/lib/penny/client"
 
 type UIPost = {
   id: string
@@ -81,7 +81,7 @@ export default function FeedPage() {
   const [commentsOpen, setCommentsOpen] = useState<string | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
-  const { data: podsData } = usePods()
+  const { data: podsData } = usePodsLive()
   const [suggestedCommunities, setSuggestedCommunities] = useState<SuggestedCommunity[]>([])
 
   // Map FeedItem -> UIPost
